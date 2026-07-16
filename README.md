@@ -7,6 +7,16 @@ Reuses the same 7TV / BTTV / FFZ / Twitch-subscriber-emote logic as the desktop 
 just moved server-side into a Vercel serverless function so it can run from a URL instead of
 `node index.mjs`.
 
+## Preview before you download
+
+Click **👁 Preview** (next to Download) to see actual thumbnails of what would be in the zip,
+grouped by source, before committing to a download. For Twitch Subscriber Emotes specifically,
+the preview also shows a **Tier 1 / Tier 2 / Tier 3 breakdown with the raw total before any
+filtering** — so if you're ever unsure whether all tiers actually came through, this is the way
+to check it directly against what Twitch's own creator dashboard shows for that channel, instead
+of trusting the zip blindly. Preview and download share the exact same underlying emote-listing
+code (`lib/emote-sources.js`), so what you see in the preview is what would end up in the zip.
+
 ## How it avoids Vercel's 4.5MB response limit
 
 Vercel serverless functions cap normal (buffered) responses at 4.5MB — a zip of a few hundred

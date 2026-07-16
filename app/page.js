@@ -9,6 +9,8 @@ const SOURCE_OPTIONS = [
   { id: "twitch", label: "Twitch Subscriber Emotes", hint: "Real sub emotes, needs a Twitch Dev app on the server" },
 ];
 
+const SOURCE_LABELS = { "7tv": "7TV", bttv: "BTTV", ffz: "FrankerFaceZ", twitch: "Twitch Subscriber Emotes" };
+
 function formatBytes(n) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
@@ -28,6 +30,7 @@ export default function Page() {
   const [bytesReceived, setBytesReceived] = useState(0);
   const logRef = useRef(null);
   const wrapRef = useRef(null);
+  const heroRef = useRef(null);
 
   // Real pointer-tracked 3D tilt on the cartridge panel — the rotation is
   // derived from actual cursor position, not a canned CSS animation.
@@ -47,6 +50,24 @@ export default function Page() {
     if (el) el.style.transform = "perspective(1600px) rotateX(0deg) rotateY(0deg)";
   }, []);
 
+  // Same idea for the hero card stack, wider range since it's a decorative
+  // showcase rather than a form the user is trying to read.
+  const handleHeroPointerMove = useCallback((e) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const el = heroRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    const maxTilt = 10;
+    el.style.transform = `perspective(1200px) rotateX(${(-py * maxTilt).toFixed(2)}deg) rotateY(${(px * maxTilt).toFixed(2)}deg)`;
+  }, []);
+
+  const handleHeroPointerLeave = useCallback(() => {
+    const el = heroRef.current;
+    if (el) el.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg)";
+  }, []);
+
   function pushLine(text, kind = "idle") {
     setLog((prev) => [...prev.slice(-200), { text, kind }]);
     requestAnimationFrame(() => {
@@ -56,6 +77,43 @@ export default function Page() {
 
   function toggleSource(id) {
     setSources((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  const [preview, setPreview] = useState(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [previewError, setPreviewError] = useState("");
+
+  async function handlePreview() {
+    setPreviewError("");
+    const selected = Object.entries(sources).filter(([, v]) => v).map(([k]) => k);
+    if (!channel.trim()) {
+      setPreviewError("Enter a channel name or URL first.");
+      return;
+    }
+    if (selected.length === 0) {
+      setPreviewError("Pick at least one emote source first.");
+      return;
+    }
+
+    setPreviewBusy(true);
+    setPreview(null);
+    try {
+      const headers = { "Content-Type": "application/json" };
+      if (accessCode) headers["x-access-code"] = accessCode;
+
+      const res = await fetch("/api/preview", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ channel: channel.trim(), sources: selected, includeGlobal, format, tier }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || `Request failed (HTTP ${res.status})`);
+      setPreview(payload);
+    } catch (err) {
+      setPreviewError(err.message);
+    } finally {
+      setPreviewBusy(false);
+    }
   }
 
   async function handleSubmit(e) {
@@ -135,32 +193,44 @@ export default function Page() {
 
   return (
     <main className="page">
-      <div className="hero">
-        <span className="eyebrow">◆ 7TV · BTTV · FFZ · TWITCH CARTRIDGE</span>
-        <h1>
-          Pop in a channel.
-          <br />
-          Get every <span className="accent">emote</span>.
-        </h1>
-        <p className="subtitle">
-          Type a channel, pick your sources and formats, hit the button. Runs server-side —
-          nothing touches your browser except the finished zip.
-        </p>
+      <div className="hero-row">
+        <div>
+          <span className="eyebrow">◆ 7TV · BTTV · FFZ · TWITCH CARTRIDGE</span>
+          <h1>
+            Pop in a channel.
+            <br />
+            Get every <span className="accent">emote</span>.
+          </h1>
+          <p className="subtitle">
+            Type a channel, pick your sources and formats, hit the button. Runs server-side —
+            nothing touches your browser except the finished zip.
+          </p>
+          <a className="scroll-cue" href="#form">
+            ↓ start below
+          </a>
+        </div>
+
+        <div
+          className="hero-stack"
+          ref={heroRef}
+          onPointerMove={handleHeroPointerMove}
+          onPointerLeave={handleHeroPointerLeave}
+          aria-hidden="true"
+        >
+          <div className="hero-card card-a">👾</div>
+          <div className="hero-card card-b">🔥</div>
+          <div className="hero-card card-c">✦</div>
+        </div>
       </div>
 
       {error && <div className="error-banner">{error}</div>}
-
-      <div className="chip-field" aria-hidden="true">
-        <span className="chip chip1">👾</span>
-        <span className="chip chip2">✦</span>
-        <span className="chip chip3">🎮</span>
-      </div>
 
       <div
         className="cartridge-wrap"
         ref={wrapRef}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
+        id="form"
       >
         <form className="grid" onSubmit={handleSubmit}>
           <div className="card">
@@ -246,11 +316,15 @@ export default function Page() {
               />
             </div>
 
-            <div className="field">
+            <div className="field button-row">
+              <button type="button" className="preview-btn" onClick={handlePreview} disabled={previewBusy}>
+                {previewBusy ? "Loading..." : "👁 Preview"}
+              </button>
               <button className="submit" type="submit" disabled={busy}>
                 {busy ? "Building zip..." : "Download zip"}
               </button>
             </div>
+            {previewError && <p className="preview-error">{previewError}</p>}
 
             <p className="footnote">
               Subscriber emotes require <code>TWITCH_CLIENT_ID</code> / <code>TWITCH_CLIENT_SECRET</code> set as
@@ -280,6 +354,64 @@ export default function Page() {
           </div>
         </form>
       </div>
+
+      {preview && (
+        <section className="preview-panel">
+          <div className="preview-panel-head">
+            <h2>Preview — {preview.displayName}</h2>
+            <button type="button" className="preview-close" onClick={() => setPreview(null)}>
+              ✕ close
+            </button>
+          </div>
+
+          {Object.entries(preview.sources).map(([sourceId, data]) => {
+            const label = SOURCE_LABELS[sourceId] || sourceId;
+            if (data.error) {
+              return (
+                <div className="preview-source" key={sourceId}>
+                  <h3>{label}</h3>
+                  <p className="preview-error">{data.error}</p>
+                </div>
+              );
+            }
+            return (
+              <div className="preview-source" key={sourceId}>
+                <h3>
+                  {label} — {data.total} emote{data.total === 1 ? "" : "s"}
+                  {data.items.length < data.total && ` (showing first ${data.items.length})`}
+                </h3>
+                {sourceId === "twitch" && data.tierCounts && (
+                  <p className="tier-breakdown">
+                    Tier 1: {data.tierCounts["1000"]} · Tier 2: {data.tierCounts["2000"]} · Tier 3: {data.tierCounts["3000"]}
+                    {" "}(raw total before filters: {data.rawTotal})
+                  </p>
+                )}
+                {data.items.length === 0 ? (
+                  <p className="preview-empty">No emotes matched — nothing to show here.</p>
+                ) : (
+                  <div className="preview-grid">
+                    {data.items.map((item, i) => (
+                      <div className="preview-tile" key={`${sourceId}-${i}`} title={item.name}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={item.previewUrl} alt={item.name} loading="lazy" />
+                        {item.tier && <span className="preview-tier-badge">T{item.tier[0]}</span>}
+                        <span className="preview-tile-name">{item.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
+
+      <footer className="site-footer">
+        <span>emote-grabber — 7TV / BTTV / FFZ / Twitch</span>
+        <a href="https://github.com" target="_blank" rel="noreferrer">
+          source on GitHub ↗
+        </a>
+      </footer>
     </main>
   );
 }

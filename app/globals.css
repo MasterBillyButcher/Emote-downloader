@@ -44,14 +44,25 @@ body {
 }
 
 .page {
-  max-width: 960px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 56px 20px 96px;
-  perspective: 1600px;
+  padding: 56px 32px 72px;
 }
 
-.hero {
-  margin-bottom: 40px;
+/* ---------- Hero: headline + fanned card stack ---------- */
+.hero-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+  margin-bottom: 56px;
+}
+
+@media (min-width: 860px) {
+  .hero-row {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 12px;
+  }
 }
 
 .eyebrow {
@@ -73,9 +84,9 @@ body {
 h1 {
   font-family: var(--font-display), sans-serif;
   font-weight: 700;
-  font-size: clamp(34px, 5.2vw, 52px);
+  font-size: clamp(36px, 4.6vw, 56px);
   line-height: 1.02;
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   letter-spacing: -0.015em;
 }
 
@@ -86,16 +97,111 @@ h1 .accent {
 
 .subtitle {
   color: var(--muted);
-  font-size: 16px;
+  font-size: 16.5px;
   line-height: 1.55;
-  max-width: 58ch;
-  margin: 0;
+  max-width: 52ch;
+  margin: 0 0 20px;
   font-weight: 500;
 }
 
-/* --- Tilting cartridge wrapper --- */
+.scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 2px;
+}
+
+/* Fanned card stack — real, at-rest layered 3D via rotation + shadow,
+   no hover required to see depth. Gets a gentle pointer-tracked tilt
+   layered on top for interactivity. */
+.hero-stack {
+  position: relative;
+  height: 280px;
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+}
+
+.hero-card {
+  position: absolute;
+  width: 168px;
+  height: 208px;
+  border: 3px solid var(--ink);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  left: 50%;
+  top: 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-card {
+    animation: cardfloat 7s ease-in-out infinite;
+  }
+}
+
+.card-a {
+  background: var(--gold);
+  box-shadow: 10px 10px 0 var(--ink);
+  transform: translate(-82%, -60%) rotate(-11deg);
+  z-index: 1;
+  animation-delay: 0s;
+}
+
+.card-b {
+  background: var(--purple);
+  box-shadow: 10px 10px 0 var(--ink);
+  transform: translate(-42%, -46%) rotate(4deg);
+  z-index: 2;
+  animation-delay: 2.2s;
+}
+
+.card-c {
+  background: var(--orange);
+  box-shadow: 10px 10px 0 var(--ink);
+  transform: translate(-8%, -56%) rotate(16deg);
+  z-index: 3;
+  animation-delay: 4.4s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes cardfloat {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -10px;
+    }
+  }
+}
+
+@media (max-width: 859px) {
+  .hero-stack {
+    height: 220px;
+    transform: none !important;
+  }
+  .hero-card {
+    width: 128px;
+    height: 160px;
+    font-size: 48px;
+  }
+}
+
+/* ---------- Form + terminal ---------- */
+
+/* Tilting cartridge wrapper for the form+terminal panel */
 .cartridge-wrap {
   transform-style: preserve-3d;
+  transform: perspective(1600px) rotateX(0deg) rotateY(0deg);
   transition: transform 0.15s ease-out;
   will-change: transform;
 }
@@ -104,12 +210,12 @@ h1 .accent {
   display: grid;
   grid-template-columns: 1fr;
   gap: 22px;
+  align-items: stretch;
 }
 
 @media (min-width: 780px) {
   .grid {
     grid-template-columns: 1.15fr 0.85fr;
-    align-items: start;
   }
 }
 
@@ -196,6 +302,8 @@ select:focus {
 
 .check-row:hover {
   background: #f1e9ff;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
 }
 
 .check-row:has(input:checked) {
@@ -241,6 +349,12 @@ select:focus {
   background: #fff;
   cursor: pointer;
   box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.radio-pill:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
 }
 
 .radio-pill input {
@@ -283,6 +397,8 @@ select:focus {
 
 .submit:hover:not(:disabled) {
   background: #ff7658;
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 var(--ink);
 }
 
 .submit:active:not(:disabled) {
@@ -295,11 +411,12 @@ select:focus {
   cursor: not-allowed;
 }
 
-/* Terminal / signature element */
+/* Terminal / signature element — now a flex column that stretches to
+   match the form card's height instead of trailing off short. */
 .terminal {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  position: sticky;
-  top: 24px;
 }
 
 .terminal-bar {
@@ -332,8 +449,8 @@ select:focus {
   font-size: 12.5px;
   line-height: 1.7;
   padding: 16px;
-  min-height: 220px;
-  max-height: 340px;
+  flex: 1;
+  min-height: 280px;
   overflow-y: auto;
   color: var(--ink);
   background: repeating-linear-gradient(180deg, #fff, #fff 20px, #f5f0e4 20px, #f5f0e4 21px);
@@ -385,71 +502,184 @@ select:focus {
   font-size: 11px;
 }
 
-/* Floating badge chips — decorative depth cues */
-.chip-field {
-  position: relative;
-  height: 0;
+/* ---------- Footer ---------- */
+.site-footer {
+  margin-top: 64px;
+  padding-top: 24px;
+  border-top: 3px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
 }
 
-.chip {
-  position: absolute;
-  border: 2.5px solid var(--ink);
+.site-footer a {
+  color: var(--ink);
+}
+
+/* ---------- Preview button + panel ---------- */
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.preview-btn {
+  flex: 0 0 auto;
+  background: #fff;
+  border: 3px solid var(--ink);
   border-radius: 10px;
+  color: var(--ink);
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 15px 18px;
+  cursor: pointer;
+  box-shadow: 5px 5px 0 var(--ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+  white-space: nowrap;
+}
+
+.preview-btn:hover:not(:disabled) {
+  background: #f1e9ff;
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.preview-btn:active:not(:disabled) {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.preview-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button-row .submit {
+  flex: 1;
+}
+
+.preview-error {
+  color: var(--error);
+  font-size: 12.5px;
+  font-weight: 700;
+  margin: 10px 0 0;
+}
+
+.preview-panel {
+  margin-top: 28px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 9px 9px 0 var(--ink);
+  padding: 26px;
+}
+
+.preview-panel-head {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  box-shadow: 4px 4px 0 var(--ink);
-  animation: float 6s ease-in-out infinite;
+  justify-content: space-between;
+  margin-bottom: 18px;
 }
 
-.chip1 {
-  top: -34px;
-  right: 60px;
-  width: 44px;
-  height: 44px;
-  background: var(--purple);
-  animation-delay: 0s;
+.preview-panel-head h2 {
+  font-family: var(--font-display), sans-serif;
+  font-size: 19px;
+  margin: 0;
 }
 
-.chip2 {
-  top: 10px;
-  right: -6px;
-  width: 34px;
-  height: 34px;
+.preview-close {
+  background: var(--ink);
+  color: var(--gold);
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.preview-source {
+  margin-bottom: 26px;
+}
+
+.preview-source:last-child {
+  margin-bottom: 0;
+}
+
+.preview-source h3 {
+  font-family: var(--font-display), sans-serif;
+  font-size: 14.5px;
+  margin: 0 0 6px;
+}
+
+.tier-breakdown {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--purple-deep);
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+.preview-empty {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+
+.preview-tile {
+  position: relative;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 8px 6px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.preview-tile img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.preview-tier-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
   background: var(--gold);
-  animation-delay: 1.4s;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
 }
 
-.chip3 {
-  top: -50px;
-  right: 150px;
-  width: 28px;
-  height: 28px;
-  background: var(--orange);
-  animation-delay: 2.6s;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0) rotate(-3deg);
-    }
-    50% {
-      transform: translateY(-10px) rotate(3deg);
-    }
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chip {
-    animation: none;
-  }
-}
-
-@media (max-width: 780px) {
-  .chip-field {
-    display: none;
-  }
+.preview-tile-name {
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { STEPS, SOURCE_INFO, FAQ_ITEMS } from "@/lib/content";
 
 const SOURCE_OPTIONS = [
   { id: "7tv", label: "7TV", hint: "Community overlay emotes, usually GIF" },
@@ -82,6 +83,8 @@ export default function Page() {
   const [preview, setPreview] = useState(null);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [previewError, setPreviewError] = useState("");
+  const [visibleCounts, setVisibleCounts] = useState({});
+  const PAGE_SIZE = 30;
 
   async function handlePreview() {
     setPreviewError("");
@@ -97,6 +100,7 @@ export default function Page() {
 
     setPreviewBusy(true);
     setPreview(null);
+    setVisibleCounts({});
     try {
       const headers = { "Content-Type": "application/json" };
       if (accessCode) headers["x-access-code"] = accessCode;
@@ -109,11 +113,18 @@ export default function Page() {
       const payload = await res.json();
       if (!res.ok) throw new Error(payload.error || `Request failed (HTTP ${res.status})`);
       setPreview(payload);
+      const initialCounts = {};
+      for (const sourceId of Object.keys(payload.sources)) initialCounts[sourceId] = PAGE_SIZE;
+      setVisibleCounts(initialCounts);
     } catch (err) {
       setPreviewError(err.message);
     } finally {
       setPreviewBusy(false);
     }
+  }
+
+  function loadMore(sourceId) {
+    setVisibleCounts((prev) => ({ ...prev, [sourceId]: (prev[sourceId] || PAGE_SIZE) + PAGE_SIZE }));
   }
 
   async function handleSubmit(e) {
@@ -192,39 +203,86 @@ export default function Page() {
   }
 
   return (
-    <main className="page">
-      <div className="hero-row">
-        <div>
-          <span className="eyebrow">◆ 7TV · BTTV · FFZ · TWITCH CARTRIDGE</span>
-          <h1>
-            Pop in a channel.
-            <br />
-            Get every <span className="accent">emote</span>.
-          </h1>
-          <p className="subtitle">
-            Type a channel, pick your sources and formats, hit the button. Runs server-side —
-            nothing touches your browser except the finished zip.
-          </p>
-          <a className="scroll-cue" href="#form">
-            ↓ start below
+    <>
+      <nav className="topnav">
+        <a className="topnav-brand" href="#top">
+          ◆ EMOTE//GRABBER
+        </a>
+        <div className="topnav-links">
+          <a href="#how-it-works">How it works</a>
+          <a href="#sources">Sources</a>
+          <a href="#form">Get emotes</a>
+          <a href="#faq">FAQ</a>
+          <a href="https://github.com" target="_blank" rel="noreferrer" className="topnav-github">
+            GitHub ↗
           </a>
         </div>
+      </nav>
 
-        <div
-          className="hero-stack"
-          ref={heroRef}
-          onPointerMove={handleHeroPointerMove}
-          onPointerLeave={handleHeroPointerLeave}
-          aria-hidden="true"
-        >
-          <div className="hero-card card-a">👾</div>
-          <div className="hero-card card-b">🔥</div>
-          <div className="hero-card card-c">✦</div>
-        </div>
-      </div>
+      <main className="page" id="top">
+        <header className="hero-row">
+          <div>
+            <span className="eyebrow">◆ 7TV · BTTV · FFZ · TWITCH CARTRIDGE</span>
+            <h1>
+              Pop in a channel.
+              <br />
+              Get every <span className="accent">emote</span>.
+            </h1>
+            <p className="subtitle">
+              Type a channel, pick your sources and formats, hit the button. Runs server-side —
+              nothing touches your browser except the finished zip.
+            </p>
+            <a className="scroll-cue" href="#form">
+              ↓ start below
+            </a>
+          </div>
+
+          <div
+            className="hero-stack"
+            ref={heroRef}
+            onPointerMove={handleHeroPointerMove}
+            onPointerLeave={handleHeroPointerLeave}
+            aria-hidden="true"
+          >
+            <div className="hero-card card-a">👾</div>
+            <div className="hero-card card-b">🔥</div>
+            <div className="hero-card card-c">✦</div>
+          </div>
+        </header>
+
+        <section className="section" id="how-it-works" aria-labelledby="how-it-works-heading">
+          <h2 id="how-it-works-heading">How it works</h2>
+          <div className="steps-grid">
+            {STEPS.map((step) => (
+              <div className="step-card" key={step.num}>
+                <span className="step-num">{step.num}</span>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="section" id="sources" aria-labelledby="sources-heading">
+          <h2 id="sources-heading">The four sources, explained</h2>
+          <p className="section-intro">
+            These aren&apos;t interchangeable — each platform is a separate service with its own
+            emote library. A channel can (and usually does) have a different set on each one.
+          </p>
+          <div className="sources-grid">
+            {SOURCE_INFO.map((s) => (
+              <div className="source-card" key={s.id}>
+                <h3>{s.name}</h3>
+                <p>{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
       {error && <div className="error-banner">{error}</div>}
 
+      <section className="section section-tight" aria-labelledby="form-heading">
+        <h2 id="form-heading">Get emotes</h2>
       <div
         className="cartridge-wrap"
         ref={wrapRef}
@@ -354,6 +412,7 @@ export default function Page() {
           </div>
         </form>
       </div>
+      </section>
 
       {preview && (
         <section className="preview-panel">
@@ -378,7 +437,6 @@ export default function Page() {
               <div className="preview-source" key={sourceId}>
                 <h3>
                   {label} — {data.total} emote{data.total === 1 ? "" : "s"}
-                  {data.items.length < data.total && ` (showing first ${data.items.length})`}
                 </h3>
                 {sourceId === "twitch" && data.tierCounts && (
                   <p className="tier-breakdown">
@@ -389,16 +447,25 @@ export default function Page() {
                 {data.items.length === 0 ? (
                   <p className="preview-empty">No emotes matched — nothing to show here.</p>
                 ) : (
-                  <div className="preview-grid">
-                    {data.items.map((item, i) => (
-                      <div className="preview-tile" key={`${sourceId}-${i}`} title={item.name}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.previewUrl} alt={item.name} loading="lazy" />
-                        {item.tier && <span className="preview-tier-badge">T{item.tier[0]}</span>}
-                        <span className="preview-tile-name">{item.name}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <>
+                    <div className="preview-grid">
+                      {data.items.slice(0, visibleCounts[sourceId] || PAGE_SIZE).map((item, i) => (
+                        <div className="preview-tile" key={`${sourceId}-${i}`} title={item.name}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.previewUrl} alt={item.name} loading="lazy" />
+                          {item.tier && <span className="preview-tier-badge">T{item.tier[0]}</span>}
+                          <span className="preview-tile-name">{item.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {(visibleCounts[sourceId] || PAGE_SIZE) < data.items.length ? (
+                      <button type="button" className="load-more-btn" onClick={() => loadMore(sourceId)}>
+                        Load more ({data.items.length - (visibleCounts[sourceId] || PAGE_SIZE)} remaining)
+                      </button>
+                    ) : (
+                      data.items.length > PAGE_SIZE && <p className="all-loaded">— all {data.items.length} loaded —</p>
+                    )}
+                  </>
                 )}
               </div>
             );
@@ -406,12 +473,31 @@ export default function Page() {
         </section>
       )}
 
+      <section className="section" id="faq" aria-labelledby="faq-heading">
+        <h2 id="faq-heading">FAQ</h2>
+        <div className="faq-list">
+          {FAQ_ITEMS.map((item, i) => (
+            <details className="faq-item" key={i}>
+              <summary>{item.q}</summary>
+              <p>{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       <footer className="site-footer">
-        <span>emote-grabber — 7TV / BTTV / FFZ / Twitch</span>
-        <a href="https://github.com" target="_blank" rel="noreferrer">
-          source on GitHub ↗
-        </a>
+        <div className="footer-top">
+          <span>emote-grabber — 7TV / BTTV / FFZ / Twitch</span>
+          <a href="https://github.com" target="_blank" rel="noreferrer">
+            source on GitHub ↗
+          </a>
+        </div>
+        <p className="footer-note">
+          Built to replace StreamDatabase after it stopped working. Not affiliated with Twitch,
+          7TV, BetterTTV, or FrankerFaceZ — just talks to their public APIs.
+        </p>
       </footer>
-    </main>
+      </main>
+    </>
   );
 }

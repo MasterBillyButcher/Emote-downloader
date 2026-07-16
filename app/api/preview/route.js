@@ -10,10 +10,12 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-// How many thumbnails we return per source. Full counts are still reported
-// even when the list is capped, so "downloads 45 but only 20 in it" (the
-// mismatch you'd actually care about) is never hidden.
-const PREVIEW_CAP = 48;
+// Safety ceiling only — not a UI page size. The upstream APIs already
+// return their full emote list in one call (no pagination exists on their
+// end), so we return everything here and let the client reveal it
+// incrementally via "Load more". This just guards against a pathological
+// channel with an absurd emote count blowing up the response.
+const SAFETY_CAP = 3000;
 
 export async function POST(req) {
   const requiredCode = process.env.ACCESS_CODE;
@@ -56,13 +58,13 @@ export async function POST(req) {
       try {
         if (source === "7tv") {
           const emotes = await list7TV(twitchUser.id, includeGlobal, format);
-          result.sources["7tv"] = { total: emotes.length, items: emotes.slice(0, PREVIEW_CAP) };
+          result.sources["7tv"] = { total: emotes.length, items: emotes.slice(0, SAFETY_CAP) };
         } else if (source === "bttv") {
           const emotes = await listBTTV(twitchUser.id, includeGlobal, format);
-          result.sources.bttv = { total: emotes.length, items: emotes.slice(0, PREVIEW_CAP) };
+          result.sources.bttv = { total: emotes.length, items: emotes.slice(0, SAFETY_CAP) };
         } else if (source === "ffz") {
           const emotes = await listFFZ(channelLogin, includeGlobal, format);
-          result.sources.ffz = { total: emotes.length, items: emotes.slice(0, PREVIEW_CAP) };
+          result.sources.ffz = { total: emotes.length, items: emotes.slice(0, SAFETY_CAP) };
         } else if (source === "twitch") {
           if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
             result.sources.twitch = {
@@ -81,7 +83,7 @@ export async function POST(req) {
           );
           result.sources.twitch = {
             total: emotes.length,
-            items: emotes.slice(0, PREVIEW_CAP),
+            items: emotes.slice(0, SAFETY_CAP),
             tierCounts,
             rawTotal,
           };

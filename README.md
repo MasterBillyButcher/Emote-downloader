@@ -52,6 +52,7 @@ git push -u origin main
 | `TWITCH_CLIENT_ID` | Only for Subscriber Emotes | from https://dev.twitch.tv/console/apps |
 | `TWITCH_CLIENT_SECRET` | Only for Subscriber Emotes | from the same app |
 | `ACCESS_CODE` | Optional | any string — gates the site behind a simple shared code |
+| `NEXT_PUBLIC_SITE_URL` | Recommended | your real deployed URL, e.g. `https://emote-grabber.vercel.app` — used for the sitemap, robots.txt, canonical/OG tags, and structured data. Without it, those fall back to a placeholder and will point at the wrong URL. |
 
 5. Deploy. You'll get a `*.vercel.app` URL.
 
@@ -86,3 +87,25 @@ credentials / access code to work locally too.
   they did in the desktop version.
 - File extensions are always based on the real HTTP `content-type` of each download, never
   guessed — so a static BTTV emote served as webp stays a `.webp`, not a mislabeled `.gif`.
+
+## Page structure
+
+The site is no longer just a bare form — it's a full page with a sticky nav (`How it works` /
+`Sources` / `Get emotes` / `FAQ`), a 3-step explainer, a section describing what each of the four
+platforms actually is, the tool itself, and an FAQ. The FAQ text lives in one place
+(`lib/content.js`) and is rendered both on the page and as `FAQPage` JSON-LD in `layout.js` — so
+there's no risk of the visible FAQ and the structured data drifting apart.
+
+## SEO
+
+- `app/robots.js` and `app/sitemap.js` generate `/robots.txt` and `/sitemap.xml` automatically.
+- `app/opengraph-image.js` and `app/icon.js` generate a real PNG social-share image and favicon
+  at build time (using Next's `next/og` — no external image assets needed).
+- `layout.js` sets full Open Graph / Twitter Card metadata, a title template, and two JSON-LD
+  blocks (`WebApplication` + `FAQPage`).
+- **Set `NEXT_PUBLIC_SITE_URL`** once you have a real domain — everything above resolves against
+  it, and leaving it as the placeholder means search engines and social platforms see the wrong
+  URL.
+- Preview's "Load more" reveals more of the *already-fetched* list client-side rather than
+  re-querying the server — the upstream APIs return their full emote list in one call regardless,
+  so there was nothing to actually paginate server-side.

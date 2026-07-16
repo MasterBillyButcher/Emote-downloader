@@ -385,8 +385,8 @@ export default function Page() {
             {previewError && <p className="preview-error">{previewError}</p>}
 
             <p className="footnote">
-              Subscriber emotes require <code>TWITCH_CLIENT_ID</code> / <code>TWITCH_CLIENT_SECRET</code> set as
-              environment variables on the deployment — see the README.
+              By downloading, you confirm you have the right to these files and agree to our{" "}
+              <a href="/terms">Terms</a>.
             </p>
           </div>
 
@@ -423,6 +423,13 @@ export default function Page() {
             </button>
           </div>
 
+          {Object.values(preview.sources).every((d) => !d.error && d.total === 0) && (
+            <p className="preview-empty">
+              This channel doesn&apos;t have emotes on any of the sources you picked — nothing
+              to preview or download here.
+            </p>
+          )}
+
           {Object.entries(preview.sources).map(([sourceId, data]) => {
             const label = SOURCE_LABELS[sourceId] || sourceId;
             if (data.error) {
@@ -433,6 +440,9 @@ export default function Page() {
                 </div>
               );
             }
+            // This channel simply doesn't use this platform — skip the
+            // section entirely instead of showing an empty "0 emotes" block.
+            if (data.total === 0) return null;
             return (
               <div className="preview-source" key={sourceId}>
                 <h3>
@@ -488,9 +498,14 @@ export default function Page() {
       <footer className="site-footer">
         <div className="footer-top">
           <span>emote-grabber — 7TV / BTTV / FFZ / Twitch</span>
-          <a href="https://github.com" target="_blank" rel="noreferrer">
-            source on GitHub ↗
-          </a>
+          <div className="footer-links">
+            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/dmca">Copyright</a>
+            <a href="https://github.com" target="_blank" rel="noreferrer">
+              source on GitHub ↗
+            </a>
+          </div>
         </div>
         <p className="footer-note">
           Built to replace StreamDatabase after it stopped working. Not affiliated with Twitch,

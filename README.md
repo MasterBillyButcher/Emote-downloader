@@ -74,6 +74,21 @@ npm run dev
 Then open http://localhost:3000. Create a `.env.local` (copy `.env.example`) for the Twitch
 credentials / access code to work locally too.
 
+## Legal pages
+
+`/terms`, `/privacy`, and `/dmca` are included and linked from the footer. They're a reasonable
+baseline for a small tool like this — not legal advice, and not a substitute for an actual lawyer
+if you're worried about real exposure. **Before you publish:**
+
+- Fill in `[DATE]` (last-updated date) and `[your-email@example.com]` — search for those exact
+  placeholders across `app/terms/page.js`, `app/privacy/page.js`, and `app/dmca/page.js`.
+- These pages describe good-faith intent and standard liability limitations. They do **not**, and
+  cannot, prevent Twitch from suspending your Developer account if Twitch decides this use case
+  violates their Developer Services Agreement — that's a platform policy decision, outside what
+  any page on your own site can control. If that risk matters to you, keep `ACCESS_CODE` set so
+  the Twitch Subscriber Emotes feature (the one that uses your Developer credentials) isn't wide
+  open to the public internet.
+
 ## Notes and limits
 
 - **Duration**: the API route is configured for up to 120 seconds (`maxDuration` in

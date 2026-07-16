@@ -1,0 +1,78 @@
+# Emote Grabber (web)
+
+Type a channel name, pick sources/format, click a button, get a zip. Runs as a Next.js app
+on Vercel — no install, works from any browser (phone included).
+
+Reuses the same 7TV / BTTV / FFZ / Twitch-subscriber-emote logic as the desktop CLI version,
+just moved server-side into a Vercel serverless function so it can run from a URL instead of
+`node index.mjs`.
+
+## How it avoids Vercel's 4.5MB response limit
+
+Vercel serverless functions cap normal (buffered) responses at 4.5MB — a zip of a few hundred
+GIF emotes blows past that easily. `app/api/download/route.js` gets around this by **streaming**
+the zip: it opens the HTTP response immediately and pipes each emote into the archive as it's
+fetched, instead of building the whole zip in memory first and sending it as one block. Streaming
+responses aren't subject to the 4.5MB cap. The page's "stream.log" panel shows this happening in
+real time — those are actual bytes arriving, not a fake progress bar.
+
+## Deploy it
+
+### 1. Push to GitHub
+
+```bash
+git init
+git add .
+git commit -m "Emote grabber"
+git branch -M main
+git remote add origin https://github.com/<your-username>/<repo-name>.git
+git push -u origin main
+```
+
+### 2. Import into Vercel
+
+1. Go to https://vercel.com/new
+2. Import the GitHub repo you just pushed
+3. Framework preset: Next.js (auto-detected) — no build settings to change
+4. Before the first deploy (or right after, then redeploy), add environment variables under
+   **Project Settings → Environment Variables**:
+
+| Name | Required? | Value |
+|---|---|---|
+| `TWITCH_CLIENT_ID` | Only for Subscriber Emotes | from https://dev.twitch.tv/console/apps |
+| `TWITCH_CLIENT_SECRET` | Only for Subscriber Emotes | from the same app |
+| `ACCESS_CODE` | Optional | any string — gates the site behind a simple shared code |
+
+5. Deploy. You'll get a `*.vercel.app` URL.
+
+### 3. (Recommended) Set `ACCESS_CODE`
+
+Without it, **anyone with the URL** can use your deployment — including burning through your
+Twitch API quota if you've set up subscriber emotes, and running up bandwidth on your Vercel
+usage. Setting `ACCESS_CODE` means the site won't build a zip for someone unless they also enter
+that code in the "Access code" field. It's a shared secret, not real auth — fine for keeping a
+personal tool private, not for anything that needs real user accounts.
+
+## Local development
+
+```bash
+npm install
+npm run dev
+```
+
+Then open http://localhost:3000. Create a `.env.local` (copy `.env.example`) for the Twitch
+credentials / access code to work locally too.
+
+## Notes and limits
+
+- **Duration**: the API route is configured for up to 120 seconds (`maxDuration` in
+  `route.js`). Vercel Hobby projects get up to 300s with Fluid Compute (on by default for new
+  projects) — raise the number if you're hitting timeouts on channels with huge emote libraries.
+  Emotes download 8-at-a-time per source to keep this fast.
+- **Twitch subscriber emotes** only work if `TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET` are set on
+  the deployment — if they're missing, the site returns a clear error instead of silently
+  skipping that source.
+- Tier filtering, global-emote inclusion, and GIF/PNG/both format filtering all work the same way
+  they did in the desktop version.
+- File extensions are always based on the real HTTP `content-type` of each download, never
+  guessed — so a static BTTV emote served as webp stays a `.webp`, not a mislabeled `.gif`.

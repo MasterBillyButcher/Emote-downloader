@@ -14,13 +14,6 @@ export default function LegalPage() {
       <h1 className="legal-title">Legal</h1>
       <p className="legal-updated">Effective July 16, 2026</p>
 
-      <div className="legal-notice">
-        This page covers the Terms of Service, Privacy Policy, and Copyright policy for Emote
-        Grabber (&quot;the Service&quot;) in one place. It&apos;s written in plain language and
-        describes how the Service is actually built to behave — it isn&apos;t a substitute for
-        legal advice on your specific situation.
-      </div>
-
       <nav className="legal-jumpnav">
         <a href="#terms">Terms of Service</a>
         <a href="#privacy">Privacy Policy</a>

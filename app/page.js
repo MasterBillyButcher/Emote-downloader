@@ -241,9 +241,24 @@ export default function Page() {
             onPointerLeave={handleHeroPointerLeave}
             aria-hidden="true"
           >
-            <div className="hero-card card-a">👾</div>
-            <div className="hero-card card-b">🔥</div>
-            <div className="hero-card card-c">✦</div>
+            <div className="hero-card card-a">
+              <svg viewBox="0 0 64 64" width="52" height="52" fill="none" aria-hidden="true">
+                <circle cx="32" cy="32" r="21" stroke="#16121c" strokeWidth="4.5" />
+                <circle cx="24" cy="28" r="3" fill="#16121c" />
+                <circle cx="40" cy="28" r="3" fill="#16121c" />
+                <path d="M21 39 Q32 49 43 39" stroke="#16121c" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+              </svg>
+            </div>
+            <div className="hero-card card-b">
+              <svg viewBox="0 0 64 64" width="46" height="46" aria-hidden="true">
+                <polygon points="36,4 14,36 28,36 24,60 50,26 34,26" fill="#16121c" />
+              </svg>
+            </div>
+            <div className="hero-card card-c">
+              <svg viewBox="0 0 64 64" width="44" height="44" aria-hidden="true">
+                <path d="M32 2 L39 25 L62 32 L39 39 L32 62 L25 39 L2 32 L25 25 Z" fill="#16121c" />
+              </svg>
+            </div>
           </div>
         </header>
 

@@ -9,7 +9,7 @@ import {
   fetchTwitchSubEmotesToArchive,
 } from "@/lib/emote-sources";
 
-// Node.js runtime is required — archiver relies on Node streams, which
+// Node.js runtime is required: archiver relies on Node streams, which
 // aren't available in the Edge runtime.
 export const runtime = "nodejs";
 
@@ -21,7 +21,7 @@ export const maxDuration = 120;
 
 export async function POST(req) {
   // Optional shared-secret protection. Only enforced if ACCESS_CODE is set
-  // in your Vercel project's environment variables — leave it unset to run
+  // in your Vercel project's environment variables. Leave it unset to run
   // with no gate (fine for personal/private use, riskier for a public URL).
   const requiredCode = process.env.ACCESS_CODE;
   if (requiredCode) {
@@ -68,7 +68,7 @@ export async function POST(req) {
   archive.on("error", (err) => passThrough.destroy(err));
   archive.pipe(passThrough);
 
-  // Fire off the actual downloading without awaiting it here — this lets us
+  // Fire off the actual downloading without awaiting it here. This lets us
   // return a streaming Response immediately, so bytes start reaching the
   // browser as soon as the first emote is fetched instead of waiting for
   // everything (which is what avoids the 4.5MB non-streaming response cap).

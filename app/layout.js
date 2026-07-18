@@ -20,13 +20,13 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-// IMPORTANT: replace with your real deployed URL once you have one — this
+// IMPORTANT: replace with your real deployed URL once you have one. This
 // is what OG images and canonical links resolve against. A placeholder
 // here means social previews and canonical tags will point at the wrong
 // place until you update it.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.vercel.app";
 
-const TITLE = "Emote Grabber — Download 7TV, BTTV, FFZ & Twitch Sub Emotes as a Zip";
+const TITLE = "Emote Grabber: Download 7TV, BTTV, FFZ & Twitch Sub Emotes as a Zip";
 const DESCRIPTION =
   "Type a Twitch channel, pick 7TV, BTTV, FrankerFaceZ, or real Twitch Subscriber Emotes by tier, preview them, and download everything as one zip. Free, open source, self-hosted.";
 
@@ -34,7 +34,7 @@ export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: TITLE,
-    template: "%s — Emote Grabber",
+    template: "%s | Emote Grabber",
   },
   description: DESCRIPTION,
   applicationName: "Emote Grabber",

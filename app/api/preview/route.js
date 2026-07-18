@@ -10,7 +10,7 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-// Safety ceiling only — not a UI page size. The upstream APIs already
+// Safety ceiling only, not a UI page size. The upstream APIs already
 // return their full emote list in one call (no pagination exists on their
 // end), so we return everything here and let the client reveal it
 // incrementally via "Load more". This just guards against a pathological

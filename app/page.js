@@ -7,7 +7,7 @@ const SOURCE_OPTIONS = [
   { id: "7tv", label: "7TV", hint: "Community overlay emotes, usually GIF" },
   { id: "bttv", label: "BTTV", hint: "BetterTTV overlay emotes" },
   { id: "ffz", label: "FrankerFaceZ", hint: "FFZ overlay emotes" },
-  { id: "twitch", label: "Twitch Subscriber Emotes", hint: "Real sub emotes, needs a Twitch Dev app on the server" },
+  { id: "twitch", label: "Twitch Subscriber Emotes", hint: "Real sub emotes, filterable by tier" },
 ];
 
 const SOURCE_LABELS = { "7tv": "7TV", bttv: "BTTV", ffz: "FrankerFaceZ", twitch: "Twitch Subscriber Emotes" };
@@ -33,7 +33,7 @@ export default function Page() {
   const wrapRef = useRef(null);
   const heroRef = useRef(null);
 
-  // Real pointer-tracked 3D tilt on the cartridge panel — the rotation is
+  // Real pointer-tracked 3D tilt on the cartridge panel: the rotation is
   // derived from actual cursor position, not a canned CSS animation.
   const handlePointerMove = useCallback((e) => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -162,7 +162,7 @@ export default function Page() {
         throw new Error(payload.error || `Request failed (HTTP ${res.status})`);
       }
 
-      pushLine("connected — streaming zip...", "ok");
+      pushLine("connected, streaming zip...", "ok");
 
       const reader = res.body.getReader();
       const chunks = [];
@@ -193,7 +193,7 @@ export default function Page() {
       a.remove();
       URL.revokeObjectURL(url);
 
-      pushLine(`done — ${formatBytes(total)} saved as ${filename}`, "ok");
+      pushLine(`done: ${formatBytes(total)} saved as ${filename}`, "ok");
     } catch (err) {
       pushLine(`error: ${err.message}`, "err");
       setError(err.message);
@@ -226,7 +226,7 @@ export default function Page() {
               Get every <span className="accent">emote</span>.
             </h1>
             <p className="subtitle">
-              Type a channel, pick your sources and formats, hit the button. Runs server-side —
+              Type a channel, pick your sources and formats, hit the button. Runs server-side, so
               nothing touches your browser except the finished zip.
             </p>
             <a className="scroll-cue" href="#form">
@@ -278,7 +278,7 @@ export default function Page() {
         <section className="section" id="sources" aria-labelledby="sources-heading">
           <h2 id="sources-heading">The four sources, explained</h2>
           <p className="section-intro">
-            These aren&apos;t interchangeable — each platform is a separate service with its own
+            These aren&apos;t interchangeable. Each platform is a separate service with its own
             emote library. A channel can (and usually does) have a different set on each one.
           </p>
           <div className="sources-grid">
@@ -429,7 +429,7 @@ export default function Page() {
       {preview && (
         <section className="preview-panel">
           <div className="preview-panel-head">
-            <h2>Preview — {preview.displayName}</h2>
+            <h2>Preview: {preview.displayName}</h2>
             <button type="button" className="preview-close" onClick={() => setPreview(null)}>
               ✕ close
             </button>
@@ -437,7 +437,7 @@ export default function Page() {
 
           {Object.values(preview.sources).every((d) => !d.error && d.total === 0) && (
             <p className="preview-empty">
-              This channel doesn&apos;t have emotes on any of the sources you picked — nothing
+              This channel doesn&apos;t have emotes on any of the sources you picked. There&apos;s nothing
               to preview or download here.
             </p>
           )}
@@ -452,13 +452,13 @@ export default function Page() {
                 </div>
               );
             }
-            // This channel simply doesn't use this platform — skip the
+            // This channel simply doesn't use this platform: skip the
             // section entirely instead of showing an empty "0 emotes" block.
             if (data.total === 0) return null;
             return (
               <div className="preview-source" key={sourceId}>
                 <h3>
-                  {label} — {data.total} emote{data.total === 1 ? "" : "s"}
+                  {label}: {data.total} emote{data.total === 1 ? "" : "s"}
                 </h3>
                 {sourceId === "twitch" && data.tierCounts && (
                   <p className="tier-breakdown">
@@ -467,7 +467,7 @@ export default function Page() {
                   </p>
                 )}
                 {data.items.length === 0 ? (
-                  <p className="preview-empty">No emotes matched — nothing to show here.</p>
+                  <p className="preview-empty">No emotes matched. Nothing to show here.</p>
                 ) : (
                   <>
                     <div className="preview-grid">
@@ -485,7 +485,7 @@ export default function Page() {
                         Load more ({data.items.length - (visibleCounts[sourceId] || PAGE_SIZE)} remaining)
                       </button>
                     ) : (
-                      data.items.length > PAGE_SIZE && <p className="all-loaded">— all {data.items.length} loaded —</p>
+                      data.items.length > PAGE_SIZE && <p className="all-loaded">All {data.items.length} loaded</p>
                     )}
                   </>
                 )}
@@ -509,15 +509,11 @@ export default function Page() {
 
       <footer className="site-footer">
         <div className="footer-top">
-          <span>emote-grabber — 7TV / BTTV / FFZ / Twitch</span>
+          <span>emote-grabber: 7TV / BTTV / FFZ / Twitch</span>
           <div className="footer-links">
             <a href="/legal">Terms · Privacy · Copyright</a>
           </div>
         </div>
-        <p className="footer-note">
-          Built to replace StreamDatabase after it stopped working. Not affiliated with Twitch,
-          7TV, BetterTTV, or FrankerFaceZ — just talks to their public APIs.
-        </p>
       </footer>
       </main>
     </>

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Emote Grabber — download 7TV, BTTV, FFZ & Twitch Subscriber Emotes as a zip";
+export const alt = "Emote Grabber: download 7TV, BTTV, FFZ & Twitch Subscriber Emotes as a zip";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

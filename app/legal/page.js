@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Legal — Terms, Privacy & Copyright",
+  title: "Legal: Terms, Privacy & Copyright",
   description: "Terms of Service, Privacy Policy, and Copyright/DMCA policy for Emote Grabber.",
 };
 
@@ -129,7 +129,7 @@ export default function LegalPage() {
           Because the Operator does not store any files, a concern is often resolved more directly
           by contacting the platform actually hosting the content (7TV, BetterTTV, FrankerFaceZ,
           or Twitch) rather than the Operator of this Service. The Operator reserves the right to
-          restrict or disable access to the Service — in whole, or for a specific source — at
+          restrict or disable access to the Service, in whole or for a specific source, at
           their discretion in response to a credible concern.
         </p>
       </section>

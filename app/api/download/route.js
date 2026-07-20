@@ -72,30 +72,57 @@ export async function POST(req) {
   // return a streaming Response immediately, so bytes start reaching the
   // browser as soon as the first emote is fetched instead of waiting for
   // everything (which is what avoids the 4.5MB non-streaming response cap).
+  //
+  // Per-emote failures used to be silently dropped from the zip with no
+  // trace (a known limitation). They're now collected here and written into
+  // the zip itself as download-report.json right before finalize(). This is
+  // deliberate: the response is a raw streamed zip body, not JSON, so
+  // there's no response left to attach a report to after the fact without
+  // buffering (which would defeat the whole point of streaming, ADR-001) or
+  // adding a second endpoint the client would have to poll.
   (async () => {
+    const sourceStats = {};
+    const failures = [];
+
+    function recordResult(sourceId, result) {
+      sourceStats[sourceId] = { requested: result.total, downloaded: result.successCount, failed: result.failures.length };
+      failures.push(...result.failures);
+    }
+
     try {
       if (sources.includes("7tv")) {
-        await fetch7TVToArchive(archive, twitchUser.id, includeGlobal, format);
+        recordResult("7tv", await fetch7TVToArchive(archive, twitchUser.id, includeGlobal, format));
       }
       if (sources.includes("bttv")) {
-        await fetchBTTVToArchive(archive, twitchUser.id, includeGlobal, format);
+        recordResult("bttv", await fetchBTTVToArchive(archive, twitchUser.id, includeGlobal, format));
       }
       if (sources.includes("ffz")) {
-        await fetchFFZToArchive(archive, channelLogin, includeGlobal, format);
+        recordResult("ffz", await fetchFFZToArchive(archive, channelLogin, includeGlobal, format));
       }
       if (sources.includes("twitch")) {
-        await fetchTwitchSubEmotesToArchive(
-          archive,
-          twitchUser.id,
-          process.env.TWITCH_CLIENT_ID,
-          process.env.TWITCH_CLIENT_SECRET,
-          tier,
-          format
+        recordResult(
+          "twitch",
+          await fetchTwitchSubEmotesToArchive(
+            archive,
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            tier,
+            format
+          )
         );
       }
     } catch (err) {
       console.error("Archive build error:", err);
     } finally {
+      const report = {
+        channel: channelLogin,
+        displayName: twitchUser.displayName,
+        generatedAt: new Date().toISOString(),
+        sources: sourceStats,
+        failures,
+      };
+      archive.append(JSON.stringify(report, null, 2), { name: "download-report.json" });
       archive.finalize();
     }
   })();

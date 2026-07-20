@@ -194,6 +194,7 @@ export default function Page() {
       URL.revokeObjectURL(url);
 
       pushLine(`done: ${formatBytes(total)} saved as ${filename}`, "ok");
+      pushLine("see download-report.json inside the zip for a per-source summary and any emotes that failed to download", "idle");
     } catch (err) {
       pushLine(`error: ${err.message}`, "err");
       setError(err.message);

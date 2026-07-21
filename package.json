@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "archiver": "^7.0.1",
+    "jszip": "^3.10.1",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

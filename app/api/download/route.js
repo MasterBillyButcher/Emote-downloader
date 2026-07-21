@@ -38,13 +38,22 @@ export async function POST(req) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { channel, sources = [], includeGlobal = false, format = "both", tier = "all" } = body;
+  const { channel, sources = [], includeGlobal = false, format = "both", tier = "all", retryOnly } = body;
 
   if (!channel || !String(channel).trim()) {
     return Response.json({ error: "Enter a channel name or URL." }, { status: 400 });
   }
   if (!Array.isArray(sources) || sources.length === 0) {
     return Response.json({ error: "Pick at least one emote source." }, { status: 400 });
+  }
+
+  // retryOnly (optional): { "7tv": ["PogChamp", "KEKW"], "bttv": [...] }.
+  // Turns a normal full-source download into a "just these specific emotes
+  // that failed last time" download, reusing the exact same list*() calls
+  // (ADR-004's preview/download parity) rather than a separate retry path.
+  function nameFilterFor(sourceId) {
+    if (!retryOnly || !Array.isArray(retryOnly[sourceId])) return undefined;
+    return new Set(retryOnly[sourceId]);
   }
 
   const channelLogin = extractChannelName(channel);
@@ -98,13 +107,22 @@ export async function POST(req) {
 
     try {
       if (sources.includes("7tv")) {
-        recordResult("7tv", await fetch7TVToArchive(archive, twitchUser.id, includeGlobal, format));
+        recordResult(
+          "7tv",
+          await fetch7TVToArchive(archive, twitchUser.id, includeGlobal, format, nameFilterFor("7tv"))
+        );
       }
       if (sources.includes("bttv")) {
-        recordResult("bttv", await fetchBTTVToArchive(archive, twitchUser.id, includeGlobal, format));
+        recordResult(
+          "bttv",
+          await fetchBTTVToArchive(archive, twitchUser.id, includeGlobal, format, nameFilterFor("bttv"))
+        );
       }
       if (sources.includes("ffz")) {
-        recordResult("ffz", await fetchFFZToArchive(archive, channelLogin, includeGlobal, format));
+        recordResult(
+          "ffz",
+          await fetchFFZToArchive(archive, channelLogin, includeGlobal, format, nameFilterFor("ffz"))
+        );
       }
       if (sources.includes("twitch")) {
         recordResult(
@@ -115,7 +133,8 @@ export async function POST(req) {
             process.env.TWITCH_CLIENT_ID,
             process.env.TWITCH_CLIENT_SECRET,
             tier,
-            format
+            format,
+            nameFilterFor("twitch")
           )
         );
       }
@@ -126,6 +145,7 @@ export async function POST(req) {
         channel: channelLogin,
         displayName: twitchUser.displayName,
         generatedAt: new Date().toISOString(),
+        isRetry: Boolean(retryOnly),
         sources: sourceStats,
         failures,
       };
@@ -134,10 +154,11 @@ export async function POST(req) {
     }
   })();
 
+  const filenameSuffix = retryOnly ? "-retry" : "";
   return new Response(Readable.toWeb(passThrough), {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="emotes-${channelLogin}.zip"`,
+      "Content-Disposition": `attachment; filename="emotes-${channelLogin}${filenameSuffix}.zip"`,
     },
   });
 }

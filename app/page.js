@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import JSZip from "jszip";
 import { STEPS, SOURCE_INFO, FAQ_ITEMS } from "@/lib/content";
 
 const SOURCE_OPTIONS = [
@@ -29,6 +30,8 @@ export default function Page() {
   const [error, setError] = useState("");
   const [log, setLog] = useState([]);
   const [bytesReceived, setBytesReceived] = useState(0);
+  const [lastFailures, setLastFailures] = useState([]);
+  const [retryBusy, setRetryBusy] = useState(false);
   const logRef = useRef(null);
   const wrapRef = useRef(null);
   const heroRef = useRef(null);
@@ -137,40 +140,27 @@ export default function Page() {
     setVisibleCounts((prev) => ({ ...prev, [sourceId]: (prev[sourceId] || PAGE_SIZE) + PAGE_SIZE }));
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-
-    const selected = Object.entries(sources)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    if (!channel.trim()) {
-      setError("Enter a channel name or URL.");
-      return;
-    }
-    if (selected.length === 0) {
-      setError("Pick at least one emote source.");
-      return;
-    }
-
-    setBusy(true);
+  // Shared by both a normal download and a "retry failed emotes" pass -
+  // same streaming/report-parsing logic either way, just a different
+  // request body. Keeping one implementation avoids the two drifting apart,
+  // the same reasoning as preview/download parity (ADR-004).
+  async function runDownload(requestBody, { isRetry = false, busySetter = setBusy, detailLine } = {}) {
+    busySetter(true);
     setBytesReceived(0);
-    setLog([]);
-    pushLine(`$ fetching emotes for "${channel.trim()}"`, "idle");
+    if (!isRetry) setLog([]);
     pushLine(
-      `sources: ${selected.join(", ")} | format: ${format}${selected.includes("twitch") ? ` | tier: ${tier}` : ""}`,
+      isRetry
+        ? `$ retrying ${requestBody.retryOnly ? "failed emotes" : "download"}...`
+        : `$ fetching emotes for "${requestBody.channel}"`,
       "idle"
     );
+    if (detailLine) pushLine(detailLine, "idle");
 
     try {
       const headers = { "Content-Type": "application/json" };
       if (accessCode) headers["x-access-code"] = accessCode;
 
-      const res = await fetch("/api/download", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ channel: channel.trim(), sources: selected, includeGlobal, format, tier }),
-      });
+      const res = await fetch("/api/download", { method: "POST", headers, body: JSON.stringify(requestBody) });
 
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
@@ -197,10 +187,9 @@ export default function Page() {
       }
 
       const blob = new Blob(chunks, { type: "application/zip" });
-      const filename = `emotes-${channel
-        .trim()
+      const filename = `emotes-${requestBody.channel
         .replace(/^https?:\/\/(www\.)?twitch\.tv\//, "")
-        .replace(/[^a-z0-9_-]/gi, "_")}.zip`;
+        .replace(/[^a-z0-9_-]/gi, "_")}${isRetry ? "-retry" : ""}.zip`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -212,21 +201,84 @@ export default function Page() {
       URL.revokeObjectURL(url);
 
       pushLine(`done: ${formatBytes(total)} saved as ${filename}`, "ok");
-      pushLine(
-        "see download-report.json inside the zip for a per-source summary and any emotes that failed to download",
-        "idle"
-      );
+
+      // Read the real report out of the zip we just built, instead of only
+      // pointing the user at a file they'd have to open themselves (the
+      // gap ADR-005 flagged as a follow-up).
+      try {
+        const zip = await JSZip.loadAsync(blob);
+        const reportEntry = zip.file("download-report.json");
+        if (reportEntry) {
+          const report = JSON.parse(await reportEntry.async("string"));
+          const totalDownloaded = Object.values(report.sources || {}).reduce((n, s) => n + s.downloaded, 0);
+          const totalFailed = (report.failures || []).length;
+          pushLine(`${totalDownloaded} emote${totalDownloaded === 1 ? "" : "s"} downloaded`, "ok");
+          if (totalFailed > 0) {
+            pushLine(`${totalFailed} emote${totalFailed === 1 ? "" : "s"} failed — see the Retry button below`, "err");
+          } else if (isRetry) {
+            pushLine("all previously failed emotes succeeded this time", "ok");
+          }
+          setLastFailures(report.failures || []);
+        }
+      } catch (parseErr) {
+        // Non-fatal: the zip already downloaded successfully, we just
+        // couldn't read our own report back out of it client-side. Fall
+        // back to the old pointer text rather than losing the info entirely.
+        console.error("Could not parse download-report.json:", parseErr);
+        pushLine("see download-report.json inside the zip for a per-source summary", "idle");
+      }
     } catch (err) {
       pushLine(`error: ${err.message}`, "err");
       setError(err.message);
     } finally {
-      setBusy(false);
+      busySetter(false);
     }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+
+    const selected = Object.entries(sources)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    if (!channel.trim()) {
+      setError("Enter a channel name or URL.");
+      return;
+    }
+    if (selected.length === 0) {
+      setError("Pick at least one emote source.");
+      return;
+    }
+
+    setLastFailures([]);
+    await runDownload(
+      { channel: channel.trim(), sources: selected, includeGlobal, format, tier },
+      {
+        detailLine: `sources: ${selected.join(", ")} | format: ${format}${selected.includes("twitch") ? ` | tier: ${tier}` : ""}`,
+      }
+    );
+  }
+
+  async function handleRetry() {
+    if (lastFailures.length === 0) return;
+    const retryOnly = {};
+    for (const f of lastFailures) {
+      (retryOnly[f.source] ||= []).push(f.name);
+    }
+    const selected = Object.keys(retryOnly);
+    await runDownload(
+      { channel: channel.trim(), sources: selected, includeGlobal, format, tier, retryOnly },
+      { isRetry: true, busySetter: setRetryBusy }
+    );
   }
 
   return (
     <>
-      <nav className="topnav">
+      <a className="skip-link" href="#top">
+        Skip to content
+      </a>
+      <nav className="topnav" aria-label="Primary">
         <a className="topnav-brand" href="#top">
           ◆ EMOTE//GRABBER
         </a>
@@ -531,6 +583,16 @@ export default function Page() {
                       className={`progress-fill${progressPercent === null ? " indeterminate" : ""}`}
                       style={progressPercent === null ? undefined : { width: `${progressPercent}%` }}
                     />
+                  </div>
+                )}
+                {lastFailures.length > 0 && !busy && (
+                  <div className="retry-banner">
+                    <span>
+                      {lastFailures.length} emote{lastFailures.length === 1 ? "" : "s"} failed to download last time.
+                    </span>
+                    <button type="button" className="retry-btn" onClick={handleRetry} disabled={retryBusy}>
+                      {retryBusy ? "Retrying..." : "Retry failed"}
+                    </button>
                   </div>
                 )}
               </div>

@@ -6,42 +6,59 @@ export const contentType = "image/png";
 
 export default async function Image() {
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "70px 90px",
-          background: "#efe9dd",
-          color: "#16121c",
-          fontFamily: "sans-serif",
-        }}
-      >
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "70px 90px",
+        background: "#08070d",
+        backgroundImage:
+          "radial-gradient(circle at 15% 10%, rgba(139,92,246,0.35), transparent 55%), radial-gradient(circle at 90% 20%, rgba(59,130,246,0.28), transparent 55%)",
+        color: "#f5f3fb",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
         <div
           style={{
+            width: 52,
+            height: 52,
             display: "flex",
-            gap: 10,
-            marginBottom: 28,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 14,
+            background: "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
+            color: "#fff",
+            fontSize: 26,
+            fontWeight: 700,
           }}
         >
-          <div style={{ width: 46, height: 46, background: "#ffc93c", border: "4px solid #16121c", borderRadius: 10 }} />
-          <div style={{ width: 46, height: 46, background: "#9146ff", border: "4px solid #16121c", borderRadius: 10 }} />
-          <div style={{ width: 46, height: 46, background: "#ff5a36", border: "4px solid #16121c", borderRadius: 10 }} />
+          ↓
         </div>
-        <div style={{ display: "flex", fontSize: 30, fontWeight: 700, letterSpacing: 2, color: "#6c2fd6", marginBottom: 14 }}>
-          7TV · BTTV · FFZ · TWITCH
-        </div>
-        <div style={{ display: "flex", fontSize: 72, fontWeight: 700, lineHeight: 1.05, maxWidth: 950 }}>
-          Pop in a channel. Get every emote.
-        </div>
-        <div style={{ display: "flex", fontSize: 26, marginTop: 24, color: "#6b6458", maxWidth: 850 }}>
-          Preview, filter by format and tier, download it all as one zip.
-        </div>
+        <div style={{ display: "flex", fontSize: 26, fontWeight: 700 }}>Emote Grabber</div>
       </div>
-    ),
+      <div
+        style={{
+          display: "flex",
+          fontSize: 20,
+          fontWeight: 600,
+          letterSpacing: 2,
+          color: "#9791b3",
+          marginBottom: 18,
+        }}
+      >
+        7TV · BTTV · FFZ · TWITCH
+      </div>
+      <div style={{ display: "flex", fontSize: 66, fontWeight: 700, lineHeight: 1.08, maxWidth: 980 }}>
+        Download. Organize. Every emote.
+      </div>
+      <div style={{ display: "flex", fontSize: 24, marginTop: 24, color: "#9791b3", maxWidth: 850 }}>
+        Preview, filter by format and tier, download it all as one zip.
+      </div>
+    </div>,
     { ...size }
   );
 }

@@ -5,6 +5,7 @@ import {
   listBTTV,
   listFFZ,
   listTwitchSubEmotes,
+  estimateTotalBytes,
 } from "@/lib/emote-sources";
 
 export const runtime = "nodejs";
@@ -58,18 +59,31 @@ export async function POST(req) {
       try {
         if (source === "7tv") {
           const emotes = await list7TV(twitchUser.id, includeGlobal, format);
-          result.sources["7tv"] = { total: emotes.length, items: emotes.slice(0, SAFETY_CAP) };
+          result.sources["7tv"] = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
+          };
         } else if (source === "bttv") {
           const emotes = await listBTTV(twitchUser.id, includeGlobal, format);
-          result.sources.bttv = { total: emotes.length, items: emotes.slice(0, SAFETY_CAP) };
+          result.sources.bttv = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
+          };
         } else if (source === "ffz") {
           const emotes = await listFFZ(channelLogin, includeGlobal, format);
-          result.sources.ffz = { total: emotes.length, items: emotes.slice(0, SAFETY_CAP) };
+          result.sources.ffz = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
+          };
         } else if (source === "twitch") {
           if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
             result.sources.twitch = {
               total: 0,
               items: [],
+              estimatedBytes: 0,
               error: "TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET not set on this deployment.",
             };
             return;
@@ -84,6 +98,7 @@ export async function POST(req) {
           result.sources.twitch = {
             total: emotes.length,
             items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
             tierCounts,
             rawTotal,
           };
@@ -93,6 +108,8 @@ export async function POST(req) {
       }
     })
   );
+
+  result.estimatedBytes = Object.values(result.sources).reduce((sum, s) => sum + (s.estimatedBytes || 0), 0);
 
   return Response.json(result);
 }

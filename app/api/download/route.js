@@ -58,7 +58,10 @@ export async function POST(req) {
 
   if (sources.includes("twitch") && (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET)) {
     return Response.json(
-      { error: "Twitch Subscriber Emotes need TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET set in this deployment's environment variables." },
+      {
+        error:
+          "Twitch Subscriber Emotes need TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET set in this deployment's environment variables.",
+      },
       { status: 400 }
     );
   }
@@ -85,7 +88,11 @@ export async function POST(req) {
     const failures = [];
 
     function recordResult(sourceId, result) {
-      sourceStats[sourceId] = { requested: result.total, downloaded: result.successCount, failed: result.failures.length };
+      sourceStats[sourceId] = {
+        requested: result.total,
+        downloaded: result.successCount,
+        failed: result.failures.length,
+      };
       failures.push(...result.failures);
     }
 

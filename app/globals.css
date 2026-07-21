@@ -662,11 +662,51 @@ select {
 }
 
 .radio-row,
-.toggle-row,
-.check-row {
+.toggle-row {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.toggle-row {
+  gap: 10px;
+  cursor: pointer;
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* The bug this fixes: without flex:1/min-width:0 here, the label text block
+   doesn't shrink to the space left after the checkbox, so .check-row's own
+   flex-wrap was wrapping the *whole text block* onto a new line below the
+   checkbox instead of just wrapping the text within it. */
+.check-row > div {
+  flex: 1;
+  min-width: 0;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--purple);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 2px 0 0;
+}
+
+.field select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  font-size: 15px;
 }
 
 .check-grid {
@@ -861,6 +901,12 @@ select {
   }
   100% {
     transform: translateX(333%);
+  }
+}
+
+@media (max-width: 480px) {
+  .check-grid {
+    grid-template-columns: 1fr;
   }
 }
 

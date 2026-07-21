@@ -36,8 +36,15 @@ body {
 body {
   background: var(--bg);
   background-image:
-    radial-gradient(600px circle at 10% -10%, rgba(139, 92, 246, 0.18), transparent 60%),
-    radial-gradient(700px circle at 90% 10%, rgba(59, 130, 246, 0.14), transparent 55%);
+    radial-gradient(600px circle at 10% -10%, rgba(139, 92, 246, 0.2), transparent 60%),
+    radial-gradient(700px circle at 90% 10%, rgba(59, 130, 246, 0.16), transparent 55%),
+    radial-gradient(650px circle at 50% 60%, rgba(236, 72, 153, 0.1), transparent 55%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    auto,
+    24px 24px;
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;
@@ -354,7 +361,16 @@ select {
 .mock-tile {
   aspect-ratio: 1;
   border-radius: 10px;
-  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease;
+}
+
+.mock-tile:hover {
+  transform: scale(1.08);
 }
 
 .mock-progress-track {
@@ -404,10 +420,50 @@ select {
 }
 
 .feature-card {
+  position: relative;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 24px -16px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent-bar, var(--gradient-brand));
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-strong);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 32px -16px rgba(0, 0, 0, 0.7);
+}
+
+.feature-card:nth-child(1) {
+  --accent-bar: linear-gradient(90deg, #8b5cf6, #a78bfa);
+}
+.feature-card:nth-child(2) {
+  --accent-bar: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+.feature-card:nth-child(3) {
+  --accent-bar: linear-gradient(90deg, #22c55e, #4ade80);
+}
+.feature-card:nth-child(4) {
+  --accent-bar: linear-gradient(90deg, #ec4899, #f472b6);
 }
 
 .feature-icon {
@@ -491,10 +547,45 @@ select {
 }
 
 .step-card {
+  position: relative;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 24px -16px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.step-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent-bar, var(--gradient-brand));
+}
+
+.step-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 32px -16px rgba(0, 0, 0, 0.7);
+}
+
+.step-card:nth-child(1) {
+  --accent-bar: linear-gradient(90deg, #8b5cf6, #a78bfa);
+}
+.step-card:nth-child(2) {
+  --accent-bar: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+.step-card:nth-child(3) {
+  --accent-bar: linear-gradient(90deg, #ec4899, #f472b6);
 }
 
 .step-num {
@@ -551,6 +642,30 @@ select {
   border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: var(--panel-2);
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.platform-badge:hover {
+  transform: translateY(-2px);
+}
+
+.platform-badge:nth-child(1) {
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #a78bfa;
+}
+.platform-badge:nth-child(2) {
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #60a5fa;
+}
+.platform-badge:nth-child(3) {
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+.platform-badge:nth-child(4) {
+  border-color: rgba(236, 72, 153, 0.5);
+  color: #f472b6;
 }
 
 .sources-grid {
@@ -560,20 +675,59 @@ select {
 }
 
 .source-card {
+  position: relative;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 22px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 24px -16px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.source-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent-bar, var(--gradient-brand));
+}
+
+.source-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 32px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* 7TV, BTTV, FrankerFaceZ, Twitch — in SOURCE_INFO order */
+.source-card:nth-child(1) {
+  --accent-bar: linear-gradient(90deg, #8b5cf6, #a78bfa);
+  --accent-text: #a78bfa;
+}
+.source-card:nth-child(2) {
+  --accent-bar: linear-gradient(90deg, #3b82f6, #60a5fa);
+  --accent-text: #60a5fa;
+}
+.source-card:nth-child(3) {
+  --accent-bar: linear-gradient(90deg, #fbbf24, #fcd34d);
+  --accent-text: #fbbf24;
+}
+.source-card:nth-child(4) {
+  --accent-bar: linear-gradient(90deg, #ec4899, #f472b6);
+  --accent-text: #f472b6;
 }
 
 .source-card h3 {
   font-size: 17px;
   margin-bottom: 8px;
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  display: inline-block;
+  color: var(--accent-text, var(--purple));
 }
 
 .source-card p {
@@ -617,6 +771,9 @@ select {
   border: 1px solid var(--border-strong);
   border-radius: 20px;
   padding: 28px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 40px -24px rgba(0, 0, 0, 0.7);
 }
 
 .field {
@@ -799,6 +956,9 @@ input[type="radio"] {
   display: flex;
   flex-direction: column;
   min-height: 100%;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 40px -24px rgba(0, 0, 0, 0.7);
 }
 
 .terminal-bar {
@@ -1012,6 +1172,14 @@ input[type="radio"] {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.preview-tile:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
 }
 
 .preview-tile img {
@@ -1071,6 +1239,11 @@ input[type="radio"] {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 16px 20px;
+  transition: border-color 0.15s ease;
+}
+
+.faq-item:hover {
+  border-color: var(--border-strong);
 }
 
 .faq-item summary {

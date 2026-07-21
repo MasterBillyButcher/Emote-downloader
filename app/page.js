@@ -337,11 +337,20 @@ export default function Page() {
                 <span className="mock-card-title">emote-grabber</span>
               </div>
               <div className="mock-tiles">
-                {["#8b5cf6", "#3b82f6", "#ec4899", "#22c55e", "#fbbf24", "#8b5cf6", "#3b82f6", "#ec4899"].map(
-                  (c, i) => (
-                    <span key={i} className="mock-tile" style={{ background: c }} />
-                  )
-                )}
+                {[
+                  { emoji: "😂", bg: "linear-gradient(135deg, #8b5cf6, #6d28d9)" },
+                  { emoji: "🔥", bg: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
+                  { emoji: "😎", bg: "linear-gradient(135deg, #ec4899, #be185d)" },
+                  { emoji: "💜", bg: "linear-gradient(135deg, #22c55e, #15803d)" },
+                  { emoji: "👀", bg: "linear-gradient(135deg, #fbbf24, #d97706)" },
+                  { emoji: "🎉", bg: "linear-gradient(135deg, #8b5cf6, #3b82f6)" },
+                  { emoji: "😭", bg: "linear-gradient(135deg, #3b82f6, #ec4899)" },
+                  { emoji: "🤔", bg: "linear-gradient(135deg, #ec4899, #fbbf24)" },
+                ].map((t, i) => (
+                  <span key={i} className="mock-tile" style={{ background: t.bg }}>
+                    {t.emoji}
+                  </span>
+                ))}
               </div>
               <div className="mock-progress-track">
                 <div className="mock-progress-fill" />

@@ -263,7 +263,10 @@ export default function Page() {
       </a>
       <nav className="topnav" aria-label="Primary">
         <a className="topnav-brand" href="#top">
-          ◆ EMOTE//GRABBER
+          <span className="brand-mark" aria-hidden="true">
+            <span className="brand-mark-arrow">↓</span>
+          </span>
+          <span className="brand-wordmark">EMOTE//GRABBER</span>
         </a>
         <div className="topnav-links">
           <a href="#form">Get emotes</a>

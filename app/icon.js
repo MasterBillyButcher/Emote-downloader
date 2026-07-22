@@ -12,15 +12,30 @@ export default function Icon() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
-        borderRadius: 8,
+        background: "#0b0d14",
+        borderRadius: 7,
+        position: "relative",
       }}
     >
+      {/* Folder/pouch silhouette, sitting behind the arrow */}
       <div
         style={{
+          position: "absolute",
+          bottom: 5,
+          width: 22,
+          height: 12,
+          borderRadius: 3,
+          background: "linear-gradient(160deg, #9d5bff 0%, #2563eb 100%)",
+        }}
+      />
+      {/* Arrow, layered on top */}
+      <div
+        style={{
+          position: "absolute",
           display: "flex",
+          top: 5,
           color: "#fff",
-          fontSize: 18,
+          fontSize: 17,
           fontWeight: 700,
         }}
       >

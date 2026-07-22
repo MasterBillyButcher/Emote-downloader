@@ -11,52 +11,85 @@ export default async function Image() {
         width: "100%",
         height: "100%",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "70px 90px",
-        background: "#08070d",
+        alignItems: "center",
+        padding: "0 90px",
+        background: "#0b0d14",
         backgroundImage:
-          "radial-gradient(circle at 15% 10%, rgba(139,92,246,0.35), transparent 55%), radial-gradient(circle at 90% 20%, rgba(59,130,246,0.28), transparent 55%)",
-        color: "#f5f3fb",
+          "radial-gradient(circle at 15% 15%, rgba(157,91,255,0.3), transparent 55%), radial-gradient(circle at 90% 80%, rgba(37,99,235,0.25), transparent 55%)",
+        color: "#e5e7eb",
         fontFamily: "sans-serif",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 32 }}>
+      {/* Mark: folder/pouch silhouette with an arrow, no borrowed logos or characters */}
+      <div
+        style={{
+          width: 220,
+          height: 220,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 40,
+          background: "#1a1d24",
+          border: "2px solid rgba(157,91,255,0.4)",
+          position: "relative",
+          flexShrink: 0,
+        }}
+      >
         <div
           style={{
-            width: 52,
-            height: 52,
+            position: "absolute",
+            bottom: 44,
+            width: 148,
+            height: 78,
+            borderRadius: 20,
+            background: "linear-gradient(160deg, #9d5bff 0%, #2563eb 100%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: 108,
+            left: 62,
+            width: 56,
+            height: 26,
+            borderRadius: "10px 10px 0 0",
+            background: "linear-gradient(160deg, #9d5bff 0%, #7c3aed 100%)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 14,
-            background: "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
-            color: "#fff",
-            fontSize: 26,
+            top: 46,
+            color: "#f5f3fb",
+            fontSize: 92,
             fontWeight: 700,
           }}
         >
           ↓
         </div>
-        <div style={{ display: "flex", fontSize: 26, fontWeight: 700 }}>Emote Grabber</div>
       </div>
-      <div
-        style={{
-          display: "flex",
-          fontSize: 20,
-          fontWeight: 600,
-          letterSpacing: 2,
-          color: "#9791b3",
-          marginBottom: 18,
-        }}
-      >
-        7TV · BTTV · FFZ · TWITCH
-      </div>
-      <div style={{ display: "flex", fontSize: 66, fontWeight: 700, lineHeight: 1.08, maxWidth: 980 }}>
-        Download. Organize. Every emote.
-      </div>
-      <div style={{ display: "flex", fontSize: 24, marginTop: 24, color: "#9791b3", maxWidth: 850 }}>
-        Preview, filter by format and tier, download it all as one zip.
+
+      <div style={{ display: "flex", flexDirection: "column", marginLeft: 56 }}>
+        <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1 }}>
+          <span style={{ color: "#f5f3fb" }}>EMOTE</span>
+          <span style={{ color: "#9d5bff", marginLeft: 20 }}>GRABBER</span>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            fontSize: 22,
+            fontWeight: 600,
+            letterSpacing: 3,
+            color: "#9d5bff",
+            marginTop: 16,
+          }}
+        >
+          DOWNLOAD · ORGANIZE · EVERY EMOTE
+        </div>
+        <div style={{ display: "flex", fontSize: 24, marginTop: 24, color: "#9ca3af", maxWidth: 620 }}>
+          Preview, filter by format and tier, download 7TV/BTTV/FFZ/Twitch emotes as one zip.
+        </div>
       </div>
     </div>,
     { ...size }

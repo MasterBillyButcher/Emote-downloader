@@ -116,14 +116,53 @@ select {
 }
 
 .topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-family: var(--font-display), sans-serif;
   font-weight: 700;
   font-size: 18px;
   text-decoration: none;
+}
+
+.brand-wordmark {
   background: var(--gradient-brand);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.brand-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  background: #1a1d24;
+  border: 1px solid rgba(157, 91, 255, 0.35);
+  overflow: hidden;
+}
+
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  width: 17px;
+  height: 9px;
+  border-radius: 3px;
+  background: linear-gradient(160deg, #9d5bff 0%, #2563eb 100%);
+}
+
+.brand-mark-arrow {
+  position: relative;
+  color: #f5f3fb;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-3px);
 }
 
 .topnav-links {

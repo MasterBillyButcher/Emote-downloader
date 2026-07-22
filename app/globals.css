@@ -290,6 +290,11 @@ select {
   color: var(--ink);
 }
 
+.field-label-note {
+  color: var(--muted);
+  font-weight: 500;
+}
+
 .field input[type="text"],
 .field input[type="password"] {
   width: 100%;
@@ -636,6 +641,20 @@ input[type="radio"] {
   padding: 8px 14px;
   font-size: 13px;
   cursor: pointer;
+}
+
+.preview-search-field {
+  margin-bottom: 24px;
+}
+
+.preview-search {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  font-size: 15px;
 }
 
 .preview-empty {

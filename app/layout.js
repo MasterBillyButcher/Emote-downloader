@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { FAQ_ITEMS } from "@/lib/content";
@@ -95,13 +96,19 @@ const jsonLd = [
   },
 ];
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // Calling headers() is itself what opts this layout into per-request
+  // dynamic rendering, which a nonce-based CSP requires (a nonce reused
+  // across requests defeats the point of it - see Next.js's CSP docs).
+  const nonce = (await headers()).get("x-nonce");
+
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
         {children}
         <script
           type="application/ld+json"
+          nonce={nonce}
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />

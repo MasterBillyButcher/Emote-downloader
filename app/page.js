@@ -76,6 +76,7 @@ export default function Page() {
       ? Math.min(100, Math.round((bytesReceived / preview.estimatedBytes) * 100))
       : null;
   const [visibleCounts, setVisibleCounts] = useState({});
+  const [previewSearch, setPreviewSearch] = useState("");
   const PAGE_SIZE = 30;
 
   async function handlePreview() {
@@ -95,6 +96,7 @@ export default function Page() {
     setPreviewBusy(true);
     setPreview(null);
     setVisibleCounts({});
+    setPreviewSearch("");
     try {
       const headers = { "Content-Type": "application/json" };
       if (accessCode) headers["x-access-code"] = accessCode;
@@ -378,10 +380,7 @@ export default function Page() {
 
                 <div className="field">
                   <label className="field-label" htmlFor="accessCode">
-                    Access code{" "}
-                    <span style={{ color: "var(--muted)", fontWeight: 500 }}>
-                      (only if this deployment has one set)
-                    </span>
+                    Access code <span className="field-label-note">(only if this deployment has one set)</span>
                   </label>
                   <input
                     id="accessCode"
@@ -488,6 +487,19 @@ export default function Page() {
               </p>
             )}
 
+            {Object.values(preview.sources).some((d) => d.total > 0) && (
+              <div className="field preview-search-field">
+                <input
+                  type="text"
+                  className="preview-search"
+                  placeholder="Search by emote name..."
+                  value={previewSearch}
+                  onChange={(e) => setPreviewSearch(e.target.value)}
+                  aria-label="Search emotes by name"
+                />
+              </div>
+            )}
+
             {Object.entries(preview.sources).map(([sourceId, data]) => {
               const label = SOURCE_LABELS[sourceId] || sourceId;
               if (data.error) {
@@ -501,23 +513,34 @@ export default function Page() {
               // This channel simply doesn't use this platform: skip the
               // section entirely instead of showing an empty "0 emotes" block.
               if (data.total === 0) return null;
+
+              const query = previewSearch.trim().toLowerCase();
+              const filteredItems = query
+                ? data.items.filter((item) => item.name.toLowerCase().includes(query))
+                : data.items;
+
+              // A source with matches elsewhere but none for this search
+              // term shouldn't clutter the panel with an empty card.
+              if (query && filteredItems.length === 0) return null;
+
               return (
                 <div className="preview-source" key={sourceId}>
                   <h3>
-                    {label}: {data.total} emote{data.total === 1 ? "" : "s"}
+                    {label}: {query ? `${filteredItems.length} of ${data.total}` : data.total} emote
+                    {data.total === 1 ? "" : "s"}
                   </h3>
-                  {sourceId === "twitch" && data.tierCounts && (
+                  {sourceId === "twitch" && data.tierCounts && !query && (
                     <p className="tier-breakdown">
                       Tier 1: {data.tierCounts["1000"]} · Tier 2: {data.tierCounts["2000"]} · Tier 3:{" "}
                       {data.tierCounts["3000"]} (raw total before filters: {data.rawTotal})
                     </p>
                   )}
-                  {data.items.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     <p className="preview-empty">No emotes matched. Nothing to show here.</p>
                   ) : (
                     <>
                       <div className="preview-grid">
-                        {data.items.slice(0, visibleCounts[sourceId] || PAGE_SIZE).map((item, i) => (
+                        {filteredItems.slice(0, visibleCounts[sourceId] || PAGE_SIZE).map((item, i) => (
                           <div className="preview-tile" key={`${sourceId}-${i}`} title={item.name}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={item.previewUrl} alt={item.name} loading="lazy" />
@@ -526,12 +549,14 @@ export default function Page() {
                           </div>
                         ))}
                       </div>
-                      {(visibleCounts[sourceId] || PAGE_SIZE) < data.items.length ? (
+                      {(visibleCounts[sourceId] || PAGE_SIZE) < filteredItems.length ? (
                         <button type="button" className="load-more-btn" onClick={() => loadMore(sourceId)}>
-                          Load more ({data.items.length - (visibleCounts[sourceId] || PAGE_SIZE)} remaining)
+                          Load more ({filteredItems.length - (visibleCounts[sourceId] || PAGE_SIZE)} remaining)
                         </button>
                       ) : (
-                        data.items.length > PAGE_SIZE && <p className="all-loaded">All {data.items.length} loaded</p>
+                        filteredItems.length > PAGE_SIZE && (
+                          <p className="all-loaded">All {filteredItems.length} loaded</p>
+                        )
                       )}
                     </>
                   )}

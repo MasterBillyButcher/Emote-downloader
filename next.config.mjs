@@ -20,26 +20,10 @@ const nextConfig = {
           // Only has effect once the site is actually served over HTTPS
           // (which it will be on Vercel), harmless as a no-op otherwise.
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-          // Baseline Content-Security-Policy. This is deliberately permissive
-          // on img-src/connect-src because the whole point of this app is
-          // fetching emote thumbnails and zip bytes from 7TV/BTTV/FFZ/Twitch
-          // CDNs at runtime. A strict allowlist would break the preview
-          // grid and the download itself. Script/style/frame directives are
-          // locked down since nothing here legitimately needs third-party
-          // scripts or embedding.
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
-              "connect-src 'self' https:",
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join("; "),
-          },
+          // NOTE: Content-Security-Policy is NOT set here. It's generated
+          // per-request in middleware.js instead, because it needs a fresh
+          // nonce on every request (a static header can't do that). See
+          // middleware.js and ADR-007 in the Developer Context doc.
         ],
       },
     ];

@@ -5,6 +5,9 @@ import {
   listBTTV,
   listFFZ,
   listTwitchSubEmotes,
+  listTwitchFollowerEmotes,
+  listTwitchBitsEmotes,
+  listTwitchBadges,
   estimateTotalBytes,
 } from "@/lib/emote-sources";
 
@@ -54,6 +57,12 @@ export async function POST(req) {
 
   const result = { channelLogin, displayName: twitchUser.displayName, sources: {} };
 
+  function requireTwitchCreds() {
+    if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
+      throw new Error("TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET not set on this deployment.");
+    }
+  }
+
   await Promise.all(
     sources.map(async (source) => {
       try {
@@ -79,15 +88,7 @@ export async function POST(req) {
             estimatedBytes: estimateTotalBytes(emotes),
           };
         } else if (source === "twitch") {
-          if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
-            result.sources.twitch = {
-              total: 0,
-              items: [],
-              estimatedBytes: 0,
-              error: "TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET not set on this deployment.",
-            };
-            return;
-          }
+          requireTwitchCreds();
           const { emotes, tierCounts, rawTotal } = await listTwitchSubEmotes(
             twitchUser.id,
             process.env.TWITCH_CLIENT_ID,
@@ -101,6 +102,44 @@ export async function POST(req) {
             estimatedBytes: estimateTotalBytes(emotes),
             tierCounts,
             rawTotal,
+          };
+        } else if (source === "twitch-follower") {
+          requireTwitchCreds();
+          const { emotes } = await listTwitchFollowerEmotes(
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            format
+          );
+          result.sources["twitch-follower"] = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
+          };
+        } else if (source === "twitch-bits") {
+          requireTwitchCreds();
+          const { emotes } = await listTwitchBitsEmotes(
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            format
+          );
+          result.sources["twitch-bits"] = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
+          };
+        } else if (source === "twitch-badges") {
+          requireTwitchCreds();
+          const { emotes } = await listTwitchBadges(
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET
+          );
+          result.sources["twitch-badges"] = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
           };
         }
       } catch (err) {

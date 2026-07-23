@@ -9,9 +9,28 @@ const SOURCE_OPTIONS = [
   { id: "bttv", label: "BTTV", hint: "BetterTTV overlay emotes" },
   { id: "ffz", label: "FrankerFaceZ", hint: "FFZ overlay emotes" },
   { id: "twitch", label: "Twitch Subscriber Emotes", hint: "Real sub emotes, filterable by tier" },
+  {
+    id: "twitch-follower",
+    label: "Twitch Follower Emotes",
+    hint: "Native Twitch, unlocked by following. Most channels no longer have any — Twitch restricted new ones in 2023",
+  },
+  { id: "twitch-bits", label: "Twitch Bits/Cheer Emotes", hint: "Native Twitch, unlocked by cheering Bits" },
+  {
+    id: "twitch-badges",
+    label: "Subscriber Loyalty Badges",
+    hint: "The tenure badges next to subscribers' names. May not work on every deployment — see FAQ",
+  },
 ];
 
-const SOURCE_LABELS = { "7tv": "7TV", bttv: "BTTV", ffz: "FrankerFaceZ", twitch: "Twitch Subscriber Emotes" };
+const SOURCE_LABELS = {
+  "7tv": "7TV",
+  bttv: "BTTV",
+  ffz: "FrankerFaceZ",
+  twitch: "Twitch Subscriber Emotes",
+  "twitch-follower": "Twitch Follower Emotes",
+  "twitch-bits": "Twitch Bits/Cheer Emotes",
+  "twitch-badges": "Subscriber Loyalty Badges",
+};
 
 function formatBytes(n) {
   if (n < 1024) return `${n} B`;

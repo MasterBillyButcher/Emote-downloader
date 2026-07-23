@@ -7,6 +7,9 @@ import {
   fetchBTTVToArchive,
   fetchFFZToArchive,
   fetchTwitchSubEmotesToArchive,
+  fetchTwitchFollowerEmotesToArchive,
+  fetchTwitchBitsEmotesToArchive,
+  fetchTwitchBadgesToArchive,
 } from "@/lib/emote-sources";
 
 // Node.js runtime is required: archiver relies on Node streams, which
@@ -65,11 +68,14 @@ export async function POST(req) {
     return Response.json({ error: err.message }, { status: 404 });
   }
 
-  if (sources.includes("twitch") && (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET)) {
+  const needsTwitchCreds = sources.some((s) =>
+    ["twitch", "twitch-follower", "twitch-bits", "twitch-badges"].includes(s)
+  );
+  if (needsTwitchCreds && (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET)) {
     return Response.json(
       {
         error:
-          "Twitch Subscriber Emotes need TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET set in this deployment's environment variables.",
+          "Twitch-derived sources need TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET set in this deployment's environment variables.",
       },
       { status: 400 }
     );
@@ -105,29 +111,40 @@ export async function POST(req) {
       failures.push(...result.failures);
     }
 
+    // Each source is isolated: one throwing (e.g. loyalty badges rejecting
+    // our app-only token) no longer aborts sources that already ran or
+    // haven't run yet. Previously a single throw anywhere in this sequence
+    // skipped everything after it - fine when every source was equally
+    // reliable, not fine now that one of them (badges) has a meaningfully
+    // higher chance of failing outright.
+    async function runSource(sourceId, fn) {
+      try {
+        recordResult(sourceId, await fn());
+      } catch (err) {
+        console.error(`Archive build error (${sourceId}):`, err);
+        sourceStats[sourceId] = { requested: 0, downloaded: 0, failed: 0, error: err.message };
+      }
+    }
+
     try {
       if (sources.includes("7tv")) {
-        recordResult(
-          "7tv",
-          await fetch7TVToArchive(archive, twitchUser.id, includeGlobal, format, nameFilterFor("7tv"))
+        await runSource("7tv", () =>
+          fetch7TVToArchive(archive, twitchUser.id, includeGlobal, format, nameFilterFor("7tv"))
         );
       }
       if (sources.includes("bttv")) {
-        recordResult(
-          "bttv",
-          await fetchBTTVToArchive(archive, twitchUser.id, includeGlobal, format, nameFilterFor("bttv"))
+        await runSource("bttv", () =>
+          fetchBTTVToArchive(archive, twitchUser.id, includeGlobal, format, nameFilterFor("bttv"))
         );
       }
       if (sources.includes("ffz")) {
-        recordResult(
-          "ffz",
-          await fetchFFZToArchive(archive, channelLogin, includeGlobal, format, nameFilterFor("ffz"))
+        await runSource("ffz", () =>
+          fetchFFZToArchive(archive, channelLogin, includeGlobal, format, nameFilterFor("ffz"))
         );
       }
       if (sources.includes("twitch")) {
-        recordResult(
-          "twitch",
-          await fetchTwitchSubEmotesToArchive(
+        await runSource("twitch", () =>
+          fetchTwitchSubEmotesToArchive(
             archive,
             twitchUser.id,
             process.env.TWITCH_CLIENT_ID,
@@ -138,7 +155,45 @@ export async function POST(req) {
           )
         );
       }
+      if (sources.includes("twitch-follower")) {
+        await runSource("twitch-follower", () =>
+          fetchTwitchFollowerEmotesToArchive(
+            archive,
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            format,
+            nameFilterFor("twitch-follower")
+          )
+        );
+      }
+      if (sources.includes("twitch-bits")) {
+        await runSource("twitch-bits", () =>
+          fetchTwitchBitsEmotesToArchive(
+            archive,
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            format,
+            nameFilterFor("twitch-bits")
+          )
+        );
+      }
+      if (sources.includes("twitch-badges")) {
+        await runSource("twitch-badges", () =>
+          fetchTwitchBadgesToArchive(
+            archive,
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            nameFilterFor("twitch-badges")
+          )
+        );
+      }
     } catch (err) {
+      // Should be unreachable now that every source is wrapped by
+      // runSource(), but kept as a last-resort backstop so the zip still
+      // finalizes with whatever was appended rather than hanging.
       console.error("Archive build error:", err);
     } finally {
       const report = {

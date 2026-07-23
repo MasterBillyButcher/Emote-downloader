@@ -102,9 +102,27 @@ export default async function RootLayout({ children }) {
   // across requests defeats the point of it - see Next.js's CSP docs).
   const nonce = (await headers()).get("x-nonce");
 
+  // Runs before React hydrates, so the right theme is on <html> before the
+  // first paint - without this, the page would flash dark-then-light (or
+  // vice versa) on every load for anyone who chose the non-default theme.
+  // Wrapped in try/catch: localStorage can throw in some private-browsing
+  // modes, and a theme flash is a much smaller problem than a broken page.
+  const themeInitScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
+
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
+        {/* Runs before anything else in the body paints, since this is a
+            blocking (non-async) inline script and the browser executes it
+            before continuing to parse what follows - same anti-flash effect
+            as a <head> script, without manually adding <head> elements to
+            the root layout (Next's own docs warn against that, since it can
+            conflict with the Metadata API's head management). */}
+        <script
+          nonce={nonce}
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
         {children}
         <script
           type="application/ld+json"

@@ -8,18 +8,7 @@ const SOURCE_OPTIONS = [
   { id: "7tv", label: "7TV", hint: "Community overlay emotes, usually GIF" },
   { id: "bttv", label: "BTTV", hint: "BetterTTV overlay emotes" },
   { id: "ffz", label: "FrankerFaceZ", hint: "FFZ overlay emotes" },
-  { id: "twitch", label: "Twitch Subscriber Emotes", hint: "Real sub emotes, filterable by tier" },
-  {
-    id: "twitch-follower",
-    label: "Twitch Follower Emotes",
-    hint: "Native Twitch, unlocked by following. Most channels no longer have any — Twitch restricted new ones in 2023",
-  },
-  { id: "twitch-bits", label: "Twitch Bits/Cheer Emotes", hint: "Native Twitch, unlocked by cheering Bits" },
-  {
-    id: "twitch-badges",
-    label: "Subscriber Loyalty Badges",
-    hint: "The tenure badges next to subscribers' names. May not work on every deployment — see FAQ",
-  },
+  { id: "twitch", label: "Twitch Emotes", hint: "Subscriber, follower, and Bits emotes, plus loyalty badges" },
 ];
 
 const SOURCE_LABELS = {
@@ -32,6 +21,21 @@ const SOURCE_LABELS = {
   "twitch-badges": "Subscriber Loyalty Badges",
 };
 
+// Sub-options revealed once the "Twitch Emotes" checkbox is on. Kept
+// separate from SOURCE_OPTIONS because these map to a source id
+// (twitchCategories.subscriber -> the "twitch" source id) rather than being
+// their own top-level source id 1:1 - see buildSelectedSources().
+const TWITCH_CATEGORY_OPTIONS = [
+  { key: "subscriber", label: "Subscriber Emotes", hint: "Real sub emotes, filterable by tier" },
+  {
+    key: "follower",
+    label: "Follower Emotes",
+    hint: "Most channels no longer have any — Twitch restricted new ones in 2023",
+  },
+  { key: "bits", label: "Bits/Cheer Emotes", hint: "Unlocked by cheering Bits" },
+  { key: "badges", label: "Subscriber Loyalty Badges", hint: "May not work on every deployment — see FAQ" },
+];
+
 function formatBytes(n) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
@@ -41,6 +45,12 @@ function formatBytes(n) {
 export default function Page() {
   const [channel, setChannel] = useState("");
   const [sources, setSources] = useState({ "7tv": true, bttv: true, ffz: true, twitch: false });
+  const [twitchCategories, setTwitchCategories] = useState({
+    subscriber: true,
+    follower: false,
+    bits: false,
+    badges: false,
+  });
   const [includeGlobal, setIncludeGlobal] = useState(false);
   const [format, setFormat] = useState("both");
   const [tier, setTier] = useState("all");
@@ -83,6 +93,44 @@ export default function Page() {
     setSources((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
+  // Reads/writes the theme directly on the DOM rather than through React
+  // state, so there's nothing for server and client renders to disagree
+  // about (the icon's visibility is pure CSS, keyed off the data-theme
+  // attribute - see globals.css). The attribute itself is first set before
+  // hydration by the inline script in layout.js, so there's no flash.
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute("data-theme") === "light" ? "light" : "dark";
+    const next = current === "light" ? "dark" : "light";
+    html.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      // Private browsing / storage disabled: theme still applies for this
+      // page load via the DOM attribute, it just won't persist next visit.
+    }
+  }
+
+  function toggleTwitchCategory(key) {
+    setTwitchCategories((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  // Expands the single "Twitch Emotes" checkbox into the actual source ids
+  // the API expects, based on which sub-categories are checked. Every
+  // other source id passes straight through unchanged.
+  function buildSelectedSources() {
+    const selected = Object.entries(sources)
+      .filter(([id, checked]) => checked && id !== "twitch")
+      .map(([id]) => id);
+    if (sources.twitch) {
+      if (twitchCategories.subscriber) selected.push("twitch");
+      if (twitchCategories.follower) selected.push("twitch-follower");
+      if (twitchCategories.bits) selected.push("twitch-bits");
+      if (twitchCategories.badges) selected.push("twitch-badges");
+    }
+    return selected;
+  }
+
   const [preview, setPreview] = useState(null);
   const [previewBusy, setPreviewBusy] = useState(false);
   const [previewError, setPreviewError] = useState("");
@@ -100,9 +148,7 @@ export default function Page() {
 
   async function handlePreview() {
     setPreviewError("");
-    const selected = Object.entries(sources)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
+    const selected = buildSelectedSources();
     if (!channel.trim()) {
       setPreviewError("Enter a channel name or URL first.");
       return;
@@ -241,9 +287,7 @@ export default function Page() {
     e.preventDefault();
     setError("");
 
-    const selected = Object.entries(sources)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
+    const selected = buildSelectedSources();
     if (!channel.trim()) {
       setError("Enter a channel name or URL.");
       return;
@@ -290,6 +334,15 @@ export default function Page() {
         <div className="topnav-links">
           <a href="#form">Get emotes</a>
           <a href="#faq">FAQ</a>
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label="Switch between light and dark theme"
+          >
+            <span className="theme-icon-dark">🌙</span>
+            <span className="theme-icon-light">☀️</span>
+          </button>
         </div>
       </nav>
 
@@ -350,9 +403,26 @@ export default function Page() {
                       </label>
                     ))}
                   </div>
+                  {sources.twitch && (
+                    <div className="twitch-subgrid">
+                      {TWITCH_CATEGORY_OPTIONS.map((opt) => (
+                        <label className="check-row" key={opt.key}>
+                          <input
+                            type="checkbox"
+                            checked={!!twitchCategories[opt.key]}
+                            onChange={() => toggleTwitchCategory(opt.key)}
+                          />
+                          <div>
+                            <div className="label">{opt.label}</div>
+                            <div className="hint">{opt.hint}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {sources.twitch && (
+                {sources.twitch && twitchCategories.subscriber && (
                   <div className="field">
                     <label className="field-label" htmlFor="tier">
                       Subscriber emote tier

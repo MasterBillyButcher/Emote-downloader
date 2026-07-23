@@ -19,12 +19,17 @@ const SOURCE_LABELS = {
   "twitch-follower": "Twitch Follower Emotes",
   "twitch-bits": "Twitch Bits/Cheer Emotes",
   "twitch-badges": "Subscriber Loyalty Badges",
+  "twitch-cheer-badges": "Cheer Badges",
+  "twitch-cheermotes": "Cheermotes",
 };
 
 // Sub-options revealed once the "Twitch Emotes" checkbox is on. Kept
 // separate from SOURCE_OPTIONS because these map to a source id
 // (twitchCategories.subscriber -> the "twitch" source id) rather than being
-// their own top-level source id 1:1 - see buildSelectedSources().
+// their own top-level source id 1:1 - see buildSelectedSources(). All
+// default to checked: checking "Twitch Emotes" gets you everything Twitch
+// has by default, rather than making you hunt down and check six boxes one
+// at a time. Uncheck individual ones here if you don't want them.
 const TWITCH_CATEGORY_OPTIONS = [
   { key: "subscriber", label: "Subscriber Emotes", hint: "Real sub emotes, filterable by tier" },
   {
@@ -33,7 +38,9 @@ const TWITCH_CATEGORY_OPTIONS = [
     hint: "Most channels no longer have any — Twitch restricted new ones in 2023",
   },
   { key: "bits", label: "Bits/Cheer Emotes", hint: "Unlocked by cheering Bits" },
+  { key: "cheermotes", label: "Cheermotes", hint: "The animated Cheer100/Cheer1000-style icons used when cheering" },
   { key: "badges", label: "Subscriber Loyalty Badges", hint: "May not work on every deployment — see FAQ" },
+  { key: "cheerBadges", label: "Cheer Badges", hint: "Bits-tier badges. Same caveat as loyalty badges — see FAQ" },
 ];
 
 function formatBytes(n) {
@@ -47,9 +54,11 @@ export default function Page() {
   const [sources, setSources] = useState({ "7tv": true, bttv: true, ffz: true, twitch: false });
   const [twitchCategories, setTwitchCategories] = useState({
     subscriber: true,
-    follower: false,
-    bits: false,
-    badges: false,
+    follower: true,
+    bits: true,
+    cheermotes: true,
+    badges: true,
+    cheerBadges: true,
   });
   const [includeGlobal, setIncludeGlobal] = useState(false);
   const [format, setFormat] = useState("both");
@@ -126,7 +135,9 @@ export default function Page() {
       if (twitchCategories.subscriber) selected.push("twitch");
       if (twitchCategories.follower) selected.push("twitch-follower");
       if (twitchCategories.bits) selected.push("twitch-bits");
+      if (twitchCategories.cheermotes) selected.push("twitch-cheermotes");
       if (twitchCategories.badges) selected.push("twitch-badges");
+      if (twitchCategories.cheerBadges) selected.push("twitch-cheer-badges");
     }
     return selected;
   }

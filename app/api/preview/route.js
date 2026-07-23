@@ -8,6 +8,8 @@ import {
   listTwitchFollowerEmotes,
   listTwitchBitsEmotes,
   listTwitchBadges,
+  listTwitchCheerBadges,
+  listTwitchCheermotes,
   estimateTotalBytes,
 } from "@/lib/emote-sources";
 
@@ -137,6 +139,31 @@ export async function POST(req) {
             process.env.TWITCH_CLIENT_SECRET
           );
           result.sources["twitch-badges"] = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
+          };
+        } else if (source === "twitch-cheer-badges") {
+          requireTwitchCreds();
+          const { emotes } = await listTwitchCheerBadges(
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET
+          );
+          result.sources["twitch-cheer-badges"] = {
+            total: emotes.length,
+            items: emotes.slice(0, SAFETY_CAP),
+            estimatedBytes: estimateTotalBytes(emotes),
+          };
+        } else if (source === "twitch-cheermotes") {
+          requireTwitchCreds();
+          const { emotes } = await listTwitchCheermotes(
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            includeGlobal
+          );
+          result.sources["twitch-cheermotes"] = {
             total: emotes.length,
             items: emotes.slice(0, SAFETY_CAP),
             estimatedBytes: estimateTotalBytes(emotes),

@@ -10,6 +10,8 @@ import {
   fetchTwitchFollowerEmotesToArchive,
   fetchTwitchBitsEmotesToArchive,
   fetchTwitchBadgesToArchive,
+  fetchTwitchCheerBadgesToArchive,
+  fetchTwitchCheermotesToArchive,
 } from "@/lib/emote-sources";
 
 // Node.js runtime is required: archiver relies on Node streams, which
@@ -69,7 +71,9 @@ export async function POST(req) {
   }
 
   const needsTwitchCreds = sources.some((s) =>
-    ["twitch", "twitch-follower", "twitch-bits", "twitch-badges"].includes(s)
+    ["twitch", "twitch-follower", "twitch-bits", "twitch-badges", "twitch-cheer-badges", "twitch-cheermotes"].includes(
+      s
+    )
   );
   if (needsTwitchCreds && (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET)) {
     return Response.json(
@@ -187,6 +191,29 @@ export async function POST(req) {
             process.env.TWITCH_CLIENT_ID,
             process.env.TWITCH_CLIENT_SECRET,
             nameFilterFor("twitch-badges")
+          )
+        );
+      }
+      if (sources.includes("twitch-cheer-badges")) {
+        await runSource("twitch-cheer-badges", () =>
+          fetchTwitchCheerBadgesToArchive(
+            archive,
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            nameFilterFor("twitch-cheer-badges")
+          )
+        );
+      }
+      if (sources.includes("twitch-cheermotes")) {
+        await runSource("twitch-cheermotes", () =>
+          fetchTwitchCheermotesToArchive(
+            archive,
+            twitchUser.id,
+            process.env.TWITCH_CLIENT_ID,
+            process.env.TWITCH_CLIENT_SECRET,
+            includeGlobal,
+            nameFilterFor("twitch-cheermotes")
           )
         );
       }

@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 
 // Generates a fresh nonce per request and sets it on both the outgoing
 // request (so a Server Component can read it via headers() and attach it to
-// the one inline script we render ourselves, the JSON-LD block) and the
-// response (the actual CSP header the browser enforces). Following the
-// pattern from Next.js's own CSP docs, since getting this wrong either
-// breaks the app (blank page) or silently reintroduces the unsafe-inline
-// gap it exists to close.
+// the inline scripts this app renders itself - the theme-init script and
+// the JSON-LD block, both in app/layout.js) and the response (the actual
+// CSP header the browser enforces). Following the pattern from Next.js's
+// own CSP docs, since getting this wrong either breaks the app (blank page)
+// or silently reintroduces the unsafe-inline gap it exists to close.
 export function middleware(request) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
 

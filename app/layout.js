@@ -29,7 +29,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.vercel.app
 
 const TITLE = "Emote Grabber: Download 7TV, BTTV, FFZ & Twitch Sub Emotes as a Zip";
 const DESCRIPTION =
-  "Type a Twitch channel, pick 7TV, BTTV, FrankerFaceZ, or real Twitch Subscriber Emotes by tier, preview them, and download everything as one zip. Free, open source, self-hosted.";
+  "Type a Twitch channel, pick 7TV, BTTV, FrankerFaceZ, or real Twitch Subscriber Emotes by tier, preview them, and download everything as one zip. Free, no sign-up, no ads or tracking.";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -118,18 +118,9 @@ export default async function RootLayout({ children }) {
             as a <head> script, without manually adding <head> elements to
             the root layout (Next's own docs warn against that, since it can
             conflict with the Metadata API's head management). */}
-        <script
-          nonce={nonce}
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: themeInitScript }}
-        />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         {children}
-        <script
-          type="application/ld+json"
-          nonce={nonce}
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </body>
     </html>
   );

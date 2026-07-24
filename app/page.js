@@ -8,7 +8,11 @@ const SOURCE_OPTIONS = [
   { id: "7tv", label: "7TV", hint: "Community overlay emotes, usually GIF" },
   { id: "bttv", label: "BTTV", hint: "BetterTTV overlay emotes" },
   { id: "ffz", label: "FrankerFaceZ", hint: "FFZ overlay emotes" },
-  { id: "twitch", label: "Twitch Emotes", hint: "Subscriber, follower, and Bits emotes, plus loyalty badges" },
+  {
+    id: "twitch",
+    label: "Twitch Emotes",
+    hint: "Subscriber, follower, Bits, and Cheermotes, plus loyalty and Cheer badges",
+  },
 ];
 
 const SOURCE_LABELS = {
@@ -23,26 +27,6 @@ const SOURCE_LABELS = {
   "twitch-cheermotes": "Cheermotes",
 };
 
-// Sub-options revealed once the "Twitch Emotes" checkbox is on. Kept
-// separate from SOURCE_OPTIONS because these map to a source id
-// (twitchCategories.subscriber -> the "twitch" source id) rather than being
-// their own top-level source id 1:1 - see buildSelectedSources(). All
-// default to checked: checking "Twitch Emotes" gets you everything Twitch
-// has by default, rather than making you hunt down and check six boxes one
-// at a time. Uncheck individual ones here if you don't want them.
-const TWITCH_CATEGORY_OPTIONS = [
-  { key: "subscriber", label: "Subscriber Emotes", hint: "Real sub emotes, filterable by tier" },
-  {
-    key: "follower",
-    label: "Follower Emotes",
-    hint: "Most channels no longer have any — Twitch restricted new ones in 2023",
-  },
-  { key: "bits", label: "Bits/Cheer Emotes", hint: "Unlocked by cheering Bits" },
-  { key: "cheermotes", label: "Cheermotes", hint: "The animated Cheer100/Cheer1000-style icons used when cheering" },
-  { key: "badges", label: "Subscriber Loyalty Badges", hint: "May not work on every deployment — see FAQ" },
-  { key: "cheerBadges", label: "Cheer Badges", hint: "Bits-tier badges. Same caveat as loyalty badges — see FAQ" },
-];
-
 function formatBytes(n) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
@@ -52,14 +36,17 @@ function formatBytes(n) {
 export default function Page() {
   const [channel, setChannel] = useState("");
   const [sources, setSources] = useState({ "7tv": true, bttv: true, ffz: true, twitch: false });
-  const [twitchCategories, setTwitchCategories] = useState({
+  // Not stateful (no UI toggles these individually) - checking "Twitch
+  // Emotes" always means all of these, deliberately, rather than making
+  // someone hunt down and check six sub-boxes one at a time.
+  const twitchCategories = {
     subscriber: true,
     follower: true,
     bits: true,
     cheermotes: true,
     badges: true,
     cheerBadges: true,
-  });
+  };
   const [includeGlobal, setIncludeGlobal] = useState(false);
   const [format, setFormat] = useState("both");
   const [tier, setTier] = useState("all");
@@ -118,10 +105,6 @@ export default function Page() {
       // Private browsing / storage disabled: theme still applies for this
       // page load via the DOM attribute, it just won't persist next visit.
     }
-  }
-
-  function toggleTwitchCategory(key) {
-    setTwitchCategories((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
   // Expands the single "Twitch Emotes" checkbox into the actual source ids
@@ -414,23 +397,6 @@ export default function Page() {
                       </label>
                     ))}
                   </div>
-                  {sources.twitch && (
-                    <div className="twitch-subgrid">
-                      {TWITCH_CATEGORY_OPTIONS.map((opt) => (
-                        <label className="check-row" key={opt.key}>
-                          <input
-                            type="checkbox"
-                            checked={!!twitchCategories[opt.key]}
-                            onChange={() => toggleTwitchCategory(opt.key)}
-                          />
-                          <div>
-                            <div className="label">{opt.label}</div>
-                            <div className="hint">{opt.hint}</div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {sources.twitch && twitchCategories.subscriber && (
